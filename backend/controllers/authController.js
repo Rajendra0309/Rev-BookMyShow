@@ -99,4 +99,72 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getProfile, getAllUsers };
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Current password is incorrect' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.status(200).json({ msg: 'Password changed successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
+const forgotPassword = async (req, res) => {
+    try {
+        const { email, securityAnswer, newPassword } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ msg: 'No account found with this email' });
+        }
+
+        if (!user.securityAnswer) {
+            return res.status(404).json({ msg: 'No security question set for this account' });
+        }
+
+        const isMatch = await bcrypt.compare(
+            securityAnswer.toLowerCase(),
+            user.securityAnswer
+        );
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Security answer is incorrect ' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.status(200).json({ msg: 'Password reset successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
+const getSecurityQuestion = async (req, res) => {
+    try {
+        const { email } = req.query;
+        const user = await User.findOne({ email }).select('securityQuestion');
+        if (!user) {
+            return res.status(404).json({ msg: 'No account found with this email' });
+        }
+        res.status(200).json({ securityQuestion: user.securityQuestion });
+    } catch (err) {
+        res.status(500).json({ msg: 'Server error' });
+    }
+};
+
+module.exports = { register, login, getProfile, getAllUsers, changePassword, forgotPassword, getSecurityQuestion };
