@@ -9,6 +9,7 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes (to be added as modules are built)
 app.use('/api/auth', require('./routes/authRoutes'));
