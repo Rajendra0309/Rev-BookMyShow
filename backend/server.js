@@ -11,13 +11,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes (to be added as modules are built)
+// Routes
 app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/movies', require('./routes/movieRoutes'));// this is for movie-management
-// app.use('/api/theatres', require('./routes/theatreRoutes')); // Samarth
-// app.use('/api/shows',    require('./routes/showRoutes'));     // Samrudhi
-// app.use('/api/bookings', require('./routes/bookingRoutes')); // Samrudhi
-app.use('/api/reports', require('./routes/reportRoutes'));   // Spoorthy
+app.use('/api/movies', require('./routes/movieRoutes'));
+app.use('/api/theatres', require('./routes/theatreRoutes'));
+app.use('/api/screens', require('./routes/screenRoutes'));
+app.use('/api/shows', require('./routes/showRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

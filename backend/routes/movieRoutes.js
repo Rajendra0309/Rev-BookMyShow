@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
+<<<<<<< HEAD
+const { createMovie } = require('../controllers/movieController');
+
+router.post('/create', createMovie);
+=======
 const {
     createMovie,
     getAllMovies,
@@ -19,5 +24,6 @@ router.delete('/:id', protect, adminOnly, deleteMovie);
 // Logged-in User Routes
 router.get('/', protect, getAllMovies);
 router.get('/:id', protect, getMovieById);
+>>>>>>> main
 
 module.exports = router;
