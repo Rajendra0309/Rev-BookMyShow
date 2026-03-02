@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import Reports from './pages/Reports';
 
 const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
@@ -32,6 +33,8 @@ function App() {
         {/* Teammates add their routes below */}
         {/* <Route path="/movies"  element={<Protected><MovieList /></Protected>} /> */}
         {/* <Route path="/booking" element={<Protected><SeatSelection /></Protected>} /> */}
+        {/* Spoorthy — Epic 5: Reports & Notifications */}
+        <Route path="/reports" element={<Protected><Reports /></Protected>} />
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
