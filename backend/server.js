@@ -17,7 +17,7 @@ app.use('/api/movies', require('./routes/movieRoutes'));// this is for movie-man
 // app.use('/api/theatres', require('./routes/theatreRoutes')); // Samarth
 // app.use('/api/shows',    require('./routes/showRoutes'));     // Samrudhi
 // app.use('/api/bookings', require('./routes/bookingRoutes')); // Samrudhi
-// app.use('/api/reports',  require('./routes/reportRoutes'));  // Spoorthy
+app.use('/api/reports', require('./routes/reportRoutes'));   // Spoorthy
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
