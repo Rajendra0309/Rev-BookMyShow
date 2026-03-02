@@ -5,15 +5,18 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Reports from './pages/Reports';
+import SeatSelection from './pages/SeatSelection';
 
 const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
 
-// Temporary placeholder until Madhusudan adds MovieList
+// Temporary placeholder until MovieList module is ready
 const MoviePlaceholder = () => (
   <div className="container mt-5 text-center">
     <h3>Login Successful!</h3>
-    <p className="text-muted">Movie listing page coming soon (Madhusudan's module)</p>
+    <p className="text-muted">
+      Movie listing page coming soon (Movie Management Module)
+    </p>
   </div>
 );
 
@@ -27,13 +30,13 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Temporary placeholder — replace with MovieList after Madhusudan's PR */}
+        {/* Movie Placeholder */}
         <Route path="/movies" element={<Protected><MoviePlaceholder /></Protected>} />
 
-        {/* Teammates add their routes below */}
-        {/* <Route path="/movies"  element={<Protected><MovieList /></Protected>} /> */}
-        {/* <Route path="/booking" element={<Protected><SeatSelection /></Protected>} /> */}
-        {/* Spoorthy — Epic 5: Reports & Notifications */}
+        {/* ✅ Your Seat Selection Route */}
+        <Route path="/booking" element={<Protected><SeatSelection /></Protected>} />
+
+        {/* Reports Module */}
         <Route path="/reports" element={<Protected><Reports /></Protected>} />
 
         <Route path="*" element={<Navigate to="/login" />} />
@@ -42,4 +45,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
