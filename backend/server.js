@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes (to be added as modules are built)
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/movies', require('./routes/movieRoutes'));// this is for movie-management
-// app.use('/api/theatres', require('./routes/theatreRoutes')); // Samarth
+app.use('/api/theatres', require('./routes/theatreRoutes')); // Samarth
 // app.use('/api/shows',    require('./routes/showRoutes'));     // Samrudhi
 // app.use('/api/bookings', require('./routes/bookingRoutes')); // Samrudhi
 app.use('/api/reports', require('./routes/reportRoutes'));   // Spoorthy
