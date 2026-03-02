@@ -6,17 +6,17 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Reports from './pages/Reports';
 import SeatSelection from './pages/SeatSelection';
+// import BookingHistory from './pages/BookingHistory'; // ← uncomment when Samrudhi completes it
+// import AdminCreateShow from './pages/AdminCreateShow'; // ← uncomment when Samrudhi completes it
 
 const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
 
-// Temporary placeholder until MovieList module is ready
-const MoviePlaceholder = () => (
+// Placeholder: replace with real component when teammate completes it
+const ComingSoon = ({ name }) => (
   <div className="container mt-5 text-center">
-    <h3>Login Successful!</h3>
-    <p className="text-muted">
-      Movie listing page coming soon (Movie Management Module)
-    </p>
+    <h4>{name} — Coming Soon</h4>
+    <p className="text-muted">This module is under development.</p>
   </div>
 );
 
@@ -31,13 +31,19 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Movie Placeholder */}
-        <Route path="/movies" element={<Protected><MoviePlaceholder /></Protected>} />
+        <Route path="/movies" element={<Protected><ComingSoon name="Movie Module" /></Protected>} />
 
         {/* ✅ Your Seat Selection Route */}
         <Route path="/booking" element={<Protected><SeatSelection /></Protected>} />
 
         {/* Reports Module */}
         <Route path="/reports" element={<Protected><Reports /></Protected>} />
+
+        {/* Booking History — uncomment import above when Samrudhi completes BookingHistory.jsx */}
+        <Route path="/bookings" element={<Protected><ComingSoon name="Booking History" /></Protected>} />
+
+        {/* Admin: Create Show — uncomment import above when Samrudhi completes AdminCreateShow.jsx */}
+        <Route path="/admin/show/create" element={<Protected><ComingSoon name="Create Show" /></Protected>} />
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
