@@ -12,6 +12,11 @@ app.use(express.json());
 
 // Routes (to be added as modules are built)
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/shows', require('./routes/showRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/movies', require('./routes/movieRoutes'));
+app.use('/api/screens', require('./routes/screenRoutes'));
+app.use('/api/theatres', require('./routes/theatreRoutes'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
