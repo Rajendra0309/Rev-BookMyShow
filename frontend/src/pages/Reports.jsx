@@ -109,10 +109,10 @@ export default function Reports() {
 
     /* -- Loaders -- */
     const loadNotifications = async () => {
-        if (!user?._id) return;
+        if (!user?.id) return;
         setNotifsLoading(true);
         try {
-            const res = await getNotifications(user._id);
+            const res = await getNotifications(user.id);
             setNotifications(res.data.data);
         } catch {
             setError('Failed to load notifications.');
