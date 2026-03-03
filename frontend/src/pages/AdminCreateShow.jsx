@@ -366,10 +366,10 @@ function AdminCreateShow() {
     setLoading(true);
     try {
       const data = await getMovies(search);
-      setMovies(data.data);
+      setMovies(data.data || []);
       setPagination({
-        total: data.total,
-        totalPages: data.totalPages
+        total: data.total || 0,
+        totalPages: data.totalPages || 1
       });
     } catch {
       alert('Error fetching movies');
@@ -387,7 +387,7 @@ function AdminCreateShow() {
   const fetchShows = async () => {
     try {
       const data = await getShows();
-      setShows(data);
+      setShows(data.data || []);
     } catch {
       alert('Error fetching shows');
     }
@@ -510,21 +510,21 @@ function AdminCreateShow() {
       </div>
     );
   }
-// =================== show model popup=======================
+  // =================== show model popup=======================
 
-    const openShowModal = (movie) => {
+  const openShowModal = (movie) => {
     setSelectedMovieForShow(movie);
-    };
+  };
 
-    const closeShowModal = () => {
+  const closeShowModal = () => {
     setSelectedMovieForShow(null);
     setShowForm({
-        screenId: '',
-        showDate: '',
-        showTime: '',
-        ticketPrice: ''
+      screenId: '',
+      showDate: '',
+      showTime: '',
+      ticketPrice: ''
     });
-    };
+  };
 
 
   return (
@@ -656,9 +656,8 @@ function AdminCreateShow() {
                 {Array.from({ length: pagination.totalPages }, (_, i) => (
                   <button
                     key={i}
-                    className={`btn btn-sm mx-1 ${
-                      search.page === i + 1 ? 'btn-primary' : 'btn-outline-primary'
-                    }`}
+                    className={`btn btn-sm mx-1 ${search.page === i + 1 ? 'btn-primary' : 'btn-outline-primary'
+                      }`}
                     onClick={() => changePage(i + 1)}
                   >
                     {i + 1}
@@ -697,155 +696,155 @@ function AdminCreateShow() {
       )}
 
       {/* ================= SHOW TAB ================= */}
-     {/* ================= SHOW TAB ================= */}
-{activeTab === 'show' && (
-  <div className="row">
+      {/* ================= SHOW TAB ================= */}
+      {activeTab === 'show' && (
+        <div className="row">
 
-    {/* LEFT COLUMN – MOVIES */}
-    <div className="col-md-6">
-      <h4>Movies</h4>
-      <table className="table table-bordered">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Create Show</th>
-          </tr>
-        </thead>
-        <tbody>
-          {movies.map(movie => (
-            <tr key={movie._id}>
-              <td>{movie.title}</td>
-              <td>
+          {/* LEFT COLUMN – MOVIES */}
+          <div className="col-md-6">
+            <h4>Movies</h4>
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Create Show</th>
+                </tr>
+              </thead>
+              <tbody>
+                {movies.map(movie => (
+                  <tr key={movie._id}>
+                    <td>{movie.title}</td>
+                    <td>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => openShowModal(movie)}
+                      >
+                        Create Show
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* RIGHT COLUMN – SHOW LIST */}
+          <div className="col-md-6">
+            <h4>All Shows</h4>
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Movie</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shows.map(show => (
+                  <tr key={show._id}>
+                    <td>{show.movieId?.title}</td>
+                    <td>{new Date(show.showDate).toLocaleDateString()}</td>
+                    <td>{show.showTime}</td>
+                    <td>{show.status}</td>
+                    <td>
+                      <button className="btn btn-warning btn-sm me-2">
+                        Edit
+                      </button>
+
+                      {show.status === 'Active' && (
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleCancelShow(show._id)}
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      )}
+
+      {/* ================= SHOW CREATION MODAL ================= */}
+      {selectedMovieForShow && (
+        <div
+          className="modal d-block"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+        >
+          <div className="modal-dialog">
+            <div className="modal-content">
+
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Create Show for: {selectedMovieForShow.title}
+                </h5>
                 <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => openShowModal(movie)}
-                >
-                  Create Show
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                  className="btn-close"
+                  onClick={closeShowModal}
+                ></button>
+              </div>
 
-    {/* RIGHT COLUMN – SHOW LIST */}
-    <div className="col-md-6">
-      <h4>All Shows</h4>
-      <table className="table table-bordered">
-        <thead>
-          <tr>
-            <th>Movie</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {shows.map(show => (
-            <tr key={show._id}>
-              <td>{show.movieId?.title}</td>
-              <td>{new Date(show.showDate).toLocaleDateString()}</td>
-              <td>{show.showTime}</td>
-              <td>{show.status}</td>
-              <td>
-                <button className="btn btn-warning btn-sm me-2">
-                  Edit
-                </button>
+              <div className="modal-body">
+                <form onSubmit={handleCreateShow}>
 
-                {show.status === 'Active' && (
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleCancelShow(show._id)}
-                  >
-                    Cancel
+                  <input
+                    className="form-control mb-2"
+                    placeholder="Screen ID"
+                    value={showForm.screenId}
+                    onChange={(e) =>
+                      setShowForm({ ...showForm, screenId: e.target.value })
+                    }
+                    required
+                  />
+
+                  <input
+                    type="date"
+                    className="form-control mb-2"
+                    value={showForm.showDate}
+                    onChange={(e) =>
+                      setShowForm({ ...showForm, showDate: e.target.value })
+                    }
+                    required
+                  />
+
+                  <input
+                    type="time"
+                    className="form-control mb-2"
+                    value={showForm.showTime}
+                    onChange={(e) =>
+                      setShowForm({ ...showForm, showTime: e.target.value })
+                    }
+                    required
+                  />
+
+                  <input
+                    type="number"
+                    className="form-control mb-3"
+                    placeholder="Ticket Price"
+                    value={showForm.ticketPrice}
+                    onChange={(e) =>
+                      setShowForm({ ...showForm, ticketPrice: e.target.value })
+                    }
+                    required
+                  />
+
+                  <button className="btn btn-success w-100">
+                    Create Show
                   </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
 
-  </div>
-)}
+                </form>
+              </div>
 
-{/* ================= SHOW CREATION MODAL ================= */}
-{selectedMovieForShow && (
-  <div
-    className="modal d-block"
-    style={{ background: 'rgba(0,0,0,0.6)' }}
-  >
-    <div className="modal-dialog">
-      <div className="modal-content">
-
-        <div className="modal-header">
-          <h5 className="modal-title">
-            Create Show for: {selectedMovieForShow.title}
-          </h5>
-          <button
-            className="btn-close"
-            onClick={closeShowModal}
-          ></button>
+            </div>
+          </div>
         </div>
-
-        <div className="modal-body">
-          <form onSubmit={handleCreateShow}>
-
-            <input
-              className="form-control mb-2"
-              placeholder="Screen ID"
-              value={showForm.screenId}
-              onChange={(e) =>
-                setShowForm({ ...showForm, screenId: e.target.value })
-              }
-              required
-            />
-
-            <input
-              type="date"
-              className="form-control mb-2"
-              value={showForm.showDate}
-              onChange={(e) =>
-                setShowForm({ ...showForm, showDate: e.target.value })
-              }
-              required
-            />
-
-            <input
-              type="time"
-              className="form-control mb-2"
-              value={showForm.showTime}
-              onChange={(e) =>
-                setShowForm({ ...showForm, showTime: e.target.value })
-              }
-              required
-            />
-
-            <input
-              type="number"
-              className="form-control mb-3"
-              placeholder="Ticket Price"
-              value={showForm.ticketPrice}
-              onChange={(e) =>
-                setShowForm({ ...showForm, ticketPrice: e.target.value })
-              }
-              required
-            />
-
-            <button className="btn btn-success w-100">
-              Create Show
-            </button>
-
-          </form>
-        </div>
-
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }

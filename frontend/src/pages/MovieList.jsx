@@ -18,10 +18,11 @@ function MovieList() {
   const fetchMovies = async () => {
     try {
       const data = await getMovies();
-      setMovies(data.data);
+      const moviesList = data.data || [];
+      setMovies(moviesList);
 
       // Check show availability for each movie
-      checkShows(data.data);
+      checkShows(moviesList);
     } catch (error) {
       console.error(error);
     } finally {

@@ -9,7 +9,7 @@ function SeatSelection() {
   useEffect(() => {
     if (showId) {
       axios
-        .get(`http://localhost:5000/api/bookings/availability/${showId}`)
+        .get(`${import.meta.env.VITE_API_URL}/bookings/availability/${showId}`)
         .then((res) => {
           setBookedSeats(res.data.bookedSeats);
         })
@@ -49,8 +49,8 @@ function SeatSelection() {
               backgroundColor: bookedSeats.includes(seat)
                 ? "red"
                 : selectedSeats.includes(seat)
-                ? "green"
-                : "gray",
+                  ? "green"
+                  : "gray",
               color: "white",
             }}
           >

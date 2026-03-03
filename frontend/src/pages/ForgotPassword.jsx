@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://localhost:5000/api/auth';
+const API = `${import.meta.env.VITE_API_URL}/auth`;
 
 export default function ForgotPassword() {
     const [step, setStep] = useState(1); // step 1: enter email, step 2: answer Q + new password

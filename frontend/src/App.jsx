@@ -36,33 +36,33 @@ function App() {
         {/* Movie Placeholder */}
         {/* <Route path="/movies" element={<Protected><ComingSoon name="Movie Module" /></Protected>} /> */}
         {/* Movie Module */}
-          <Route 
-            path="/movies" 
-            element={
-              <Protected>
-                <MovieList />
-              </Protected>
-            } 
-          />
+        <Route
+          path="/movies"
+          element={
+            <Protected>
+              <MovieList />
+            </Protected>
+          }
+        />
 
-          <Route 
-            path="/movies/:id" 
-            element={
-              <Protected>
-                <MovieDetails />
-              </Protected>
-            } 
-          />
+        <Route
+          path="/movies/:id"
+          element={
+            <Protected>
+              <MovieDetails />
+            </Protected>
+          }
+        />
 
-          <Route 
-            path="/admin/show/create" 
-            element={
-              <Protected>
-                <AdminCreateShow />
-              </Protected>
-            } 
-          />
-      
+        <Route
+          path="/admin/show/create"
+          element={
+            <Protected>
+              <AdminCreateShow />
+            </Protected>
+          }
+        />
+
         {/* ✅ Your Seat Selection Route */}
         <Route path="/booking" element={<Protected><SeatSelection /></Protected>} />
 
@@ -71,9 +71,6 @@ function App() {
 
         {/* Booking History — uncomment import above when Samrudhi completes BookingHistory.jsx */}
         <Route path="/bookings" element={<Protected><ComingSoon name="Booking History" /></Protected>} />
-
-        {/* Admin: Create Show — uncomment import above when Samrudhi completes AdminCreateShow.jsx */}
-        <Route path="/admin/show/create" element={<Protected><ComingSoon name="Create Show" /></Protected>} />
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
