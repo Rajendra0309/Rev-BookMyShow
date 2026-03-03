@@ -6,6 +6,9 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Reports from './pages/Reports';
 import SeatSelection from './pages/SeatSelection';
+import MovieList from './pages/MovieList';
+import MovieDetails from './pages/MovieDetails';
+import AdminCreateShow from './pages/AdminCreateShow';
 // import BookingHistory from './pages/BookingHistory'; // ← uncomment when Samrudhi completes it
 // import AdminCreateShow from './pages/AdminCreateShow'; // ← uncomment when Samrudhi completes it
 
@@ -31,8 +34,35 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Movie Placeholder */}
-        <Route path="/movies" element={<Protected><ComingSoon name="Movie Module" /></Protected>} />
+        {/* <Route path="/movies" element={<Protected><ComingSoon name="Movie Module" /></Protected>} /> */}
+        {/* Movie Module */}
+          <Route 
+            path="/movies" 
+            element={
+              <Protected>
+                <MovieList />
+              </Protected>
+            } 
+          />
 
+          <Route 
+            path="/movies/:id" 
+            element={
+              <Protected>
+                <MovieDetails />
+              </Protected>
+            } 
+          />
+
+          <Route 
+            path="/admin/show/create" 
+            element={
+              <Protected>
+                <AdminCreateShow />
+              </Protected>
+            } 
+          />
+      
         {/* ✅ Your Seat Selection Route */}
         <Route path="/booking" element={<Protected><SeatSelection /></Protected>} />
 
