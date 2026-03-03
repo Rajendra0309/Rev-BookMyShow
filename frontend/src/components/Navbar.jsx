@@ -4,6 +4,7 @@ import { getUser, logout } from '../services/authService';
 export default function Navbar() {
     const navigate = useNavigate();
     const user = getUser();
+    const isAdmin = user?.role === 'Admin';
 
     const handleLogout = () => {
         logout();
@@ -16,6 +17,33 @@ export default function Navbar() {
             <div className='d-flex align-items-center gap-3'>
                 {user ? (
                     <>
+                        {/* Common link */}
+                        <Link className='text-white text-decoration-none' to="/movies">Movies</Link>
+
+                        {/* Admin-only links */}
+                        {isAdmin && (
+                            <Link className='text-white text-decoration-none' to="/admin/show/create">
+                                Admin Panel
+                            </Link>
+                        )}
+                        {isAdmin && (
+                            <Link className='text-white text-decoration-none' to="/reports">
+                                Reports
+                            </Link>
+                        )}
+
+                        {/* Customer-only links */}
+                        {!isAdmin && (
+                            <Link className='text-white text-decoration-none' to="/bookings">
+                                My Bookings
+                            </Link>
+                        )}
+                        {!isAdmin && (
+                            <Link className='text-white text-decoration-none' to="/reports">
+                                🔔 Notifications
+                            </Link>
+                        )}
+
                         <span className='text-secondary small'>Hi, {user.name} ({user.role})</span>
                         <button className='btn btn-sm btn-danger' onClick={handleLogout}>Logout</button>
                     </>
