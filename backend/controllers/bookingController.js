@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Show = require('../models/Show');
+const { createNotification } = require('./reportController');
 
 // 🔹 Create Booking
 exports.createBooking = async (req, res) => {
@@ -58,6 +59,15 @@ exports.createBooking = async (req, res) => {
 
         await newBooking.save();
 
+        // 🔔 Spoorthy: Notify user of booking confirmation
+        const showDateStr = show.showDate
+            ? new Date(show.showDate).toDateString()
+            : 'upcoming';
+        await createNotification(
+            userId,
+            `Booking confirmed! 🎉 Show on ${showDateStr} at ${show.showTime}. Total: ₹${totalAmount}.`
+        );
+
         res.status(201).json({
             message: "Booking successful",
             booking: newBooking
@@ -109,6 +119,12 @@ exports.cancelBooking = async (req, res) => {
 
         booking.status = "Cancelled";
         await booking.save();
+
+        // 🔔 Spoorthy: Notify user of booking cancellation
+        await createNotification(
+            booking.userId.toString(),
+            `Your booking has been cancelled. Show was on ${new Date(show.showDate).toDateString()} at ${show.showTime}.`
+        );
 
         res.status(200).json({
             message: "Booking cancelled successfully",
