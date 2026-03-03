@@ -45,23 +45,21 @@ exports.createMovie = async (req, res) => {
    ====================================================== */
 exports.getAllMovies = async (req, res) => {
     try {
-        const { title, genre, language, page = 1, limit = 10 } = req.query;
+        const { search, page = 1, limit = 10 } = req.query;
 
         const pageNumber = Number(page);
         const limitNumber = Number(limit);
 
-        let filter = { status: 'Active' }; // 🔥 Only active movies
+        let filter = { status: 'Active' };
 
-        if (title) {
-            filter.title = { $regex: title, $options: 'i' };
-        }
+        if (search) {
+            const searchRegex = { $regex: search, $options: 'i' };
 
-        if (language) {
-            filter.language = language;
-        }
-
-        if (genre) {
-            filter.genre = genre;
+            filter.$or = [
+                { title: searchRegex },
+                { language: searchRegex },
+                { genre: searchRegex }
+            ];
         }
 
         const total = await Movie.countDocuments(filter);
