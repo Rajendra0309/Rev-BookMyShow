@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Reports from './pages/Reports';
+import TheatreList from './pages/TheatreList';
 
 const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
@@ -35,6 +36,8 @@ function App() {
         {/* <Route path="/booking" element={<Protected><SeatSelection /></Protected>} /> */}
         {/* Spoorthy — Epic 5: Reports & Notifications */}
         <Route path="/reports" element={<Protected><Reports /></Protected>} />
+        {/* Samarth — Epic 3: Theatre & Screen Management */}
+        <Route path="/theatres" element={<Protected><TheatreList /></Protected>} />
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
