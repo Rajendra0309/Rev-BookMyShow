@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Reports from './pages/Reports';
 import SeatSelection from './pages/SeatSelection';
+import BookingHistory from './pages/BookingHistory';
+import AdminCreateShow from './pages/AdminCreateShow';
 
 const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
@@ -33,8 +35,12 @@ function App() {
         {/* Movie Placeholder */}
         <Route path="/movies" element={<Protected><MoviePlaceholder /></Protected>} />
 
-        {/* ✅ Your Seat Selection Route */}
+        {/* Booking Routes */}
         <Route path="/booking" element={<Protected><SeatSelection /></Protected>} />
+        <Route path="/bookings" element={<Protected><BookingHistory /></Protected>} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/show/create" element={<Protected><AdminCreateShow /></Protected>} />
 
         {/* Reports Module */}
         <Route path="/reports" element={<Protected><Reports /></Protected>} />

@@ -12,17 +12,16 @@ exports.createBooking = async (req, res) => {
             return res.status(404).json({ message: "Show not found" });
         }
         // Prevent booking if show already started
-const currentDateTime = new Date();
-const showDateTime = new Date(show.showDate);
+        const currentDateTime = new Date();
+        const [hours, minutes] = show.showTime.split(':').map(Number);
+        const showDateTime = new Date(show.showDate);
+        showDateTime.setHours(hours, minutes, 0, 0);
 
-// (Optional improvement: combine date + time properly later)
-// For now we check date only
-
-if (currentDateTime > showDateTime) {
-    return res.status(400).json({
-        message: "Cannot book. Show already started."
-    });
-}
+        if (currentDateTime > showDateTime) {
+            return res.status(400).json({
+                message: "Cannot book. Show already started."
+            });
+        }
 
         // 2️⃣ Check if show is cancelled
         if (show.status === "Cancelled") {
@@ -97,14 +96,20 @@ exports.cancelBooking = async (req, res) => {
         }
         const show = await Show.findById(booking.showId);
 
-const currentDateTime = new Date();
-const showDateTime = new Date(show.showDate);
+        if (!show) {
+            return res.status(404).json({ message: "Associated show not found" });
+        }
 
-if (currentDateTime > showDateTime) {
-    return res.status(400).json({
-        message: "Cannot cancel after show started"
-    });
-}
+        const currentDateTime = new Date();
+        const [hours, minutes] = show.showTime.split(':').map(Number);
+        const showDateTime = new Date(show.showDate);
+        showDateTime.setHours(hours, minutes, 0, 0);
+
+        if (currentDateTime > showDateTime) {
+            return res.status(400).json({
+                message: "Cannot cancel after show started"
+            });
+        }
 
         booking.status = "Cancelled";
         await booking.save();

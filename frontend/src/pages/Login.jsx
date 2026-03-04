@@ -13,7 +13,7 @@ export default function Login() {
             const { data } = await login(form);
             saveToken(data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            navigate('/movies');
+            navigate('/booking');
         } catch (err) {
             setError(err.response?.data?.msg || 'Login failed');
         }
