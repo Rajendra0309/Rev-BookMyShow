@@ -1,10 +1,12 @@
 const Booking = require('../models/Booking');
 const Show = require('../models/Show');
+const { createNotification } = require('./reportController');
 
 // 🔹 Create Booking
 exports.createBooking = async (req, res) => {
     try {
-        const { userId, showId, seats } = req.body;
+        const { showId, seats } = req.body;
+        const userId = req.user.id;
 
         // 1️⃣ Check if show exists
         const show = await Show.findById(showId);
@@ -13,10 +15,18 @@ exports.createBooking = async (req, res) => {
         }
         // Prevent booking if show already started
         const currentDateTime = new Date();
+<<<<<<< HEAD
         const [hours, minutes] = show.showTime.split(':').map(Number);
         const showDateTime = new Date(show.showDate);
         showDateTime.setHours(hours, minutes, 0, 0);
 
+=======
+        const showDateTime = new Date(show.showDate);
+
+        // (Optional improvement: combine date + time properly later)
+        // For now we check date only
+
+>>>>>>> 2c786817f667e05858eac78b664c450b8e39526d
         if (currentDateTime > showDateTime) {
             return res.status(400).json({
                 message: "Cannot book. Show already started."
@@ -56,6 +66,15 @@ exports.createBooking = async (req, res) => {
 
         await newBooking.save();
 
+        // 🔔 Spoorthy: Notify user of booking confirmation
+        const showDateStr = show.showDate
+            ? new Date(show.showDate).toDateString()
+            : 'upcoming';
+        await createNotification(
+            userId,
+            `Booking confirmed! 🎉 Show on ${showDateStr} at ${show.showTime}. Total: ₹${totalAmount}.`
+        );
+
         res.status(201).json({
             message: "Booking successful",
             booking: newBooking
@@ -70,7 +89,7 @@ exports.createBooking = async (req, res) => {
 // 🔹 Get Booking History by User
 exports.getBookingsByUser = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const userId = req.user.id;
 
         const bookings = await Booking.find({ userId })
             .populate('showId')
@@ -96,6 +115,7 @@ exports.cancelBooking = async (req, res) => {
         }
         const show = await Show.findById(booking.showId);
 
+<<<<<<< HEAD
         if (!show) {
             return res.status(404).json({ message: "Associated show not found" });
         }
@@ -105,6 +125,11 @@ exports.cancelBooking = async (req, res) => {
         const showDateTime = new Date(show.showDate);
         showDateTime.setHours(hours, minutes, 0, 0);
 
+=======
+        const currentDateTime = new Date();
+        const showDateTime = new Date(show.showDate);
+
+>>>>>>> 2c786817f667e05858eac78b664c450b8e39526d
         if (currentDateTime > showDateTime) {
             return res.status(400).json({
                 message: "Cannot cancel after show started"
@@ -113,6 +138,12 @@ exports.cancelBooking = async (req, res) => {
 
         booking.status = "Cancelled";
         await booking.save();
+
+        // 🔔 Spoorthy: Notify user of booking cancellation
+        await createNotification(
+            booking.userId.toString(),
+            `Your booking has been cancelled. Show was on ${new Date(show.showDate).toDateString()} at ${show.showTime}.`
+        );
 
         res.status(200).json({
             message: "Booking cancelled successfully",

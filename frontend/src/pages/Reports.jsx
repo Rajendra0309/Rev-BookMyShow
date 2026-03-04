@@ -198,7 +198,7 @@ export default function Reports() {
         <div style={styles.page}>
             {/* Page Header */}
             <div style={styles.pageHeader}>
-                <h1 style={styles.pageTitle}>📊 Reports &amp; Notifications</h1>
+                <h1 style={styles.pageTitle}>{isAdmin ? '📊 Reports & Notifications' : '🔔 Notifications'}</h1>
                 <p style={styles.pageSubtitle}>
                     {isAdmin ? 'Admin Dashboard — Revenue, Occupancy &amp; Booking Analytics' : 'Your Notification Centre'}
                 </p>

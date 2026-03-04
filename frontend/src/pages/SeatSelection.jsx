@@ -16,7 +16,16 @@ function SeatSelection() {
 
   useEffect(() => {
     if (showId) {
+<<<<<<< HEAD
       fetchBookedSeats();
+=======
+      axios
+        .get(`${import.meta.env.VITE_API_URL}/bookings/availability/${showId}`)
+        .then((res) => {
+          setBookedSeats(res.data.bookedSeats);
+        })
+        .catch((err) => console.log(err));
+>>>>>>> 2c786817f667e05858eac78b664c450b8e39526d
     }
   }, [showId]);
 
@@ -105,6 +114,7 @@ function SeatSelection() {
       {error && <div className="alert alert-danger">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
+<<<<<<< HEAD
       <div className="row mb-4">
         <div className="col-md-6">
           <div className="form-group">
@@ -130,6 +140,27 @@ function SeatSelection() {
             />
           </div>
         </div>
+=======
+      <div style={{ marginTop: "20px" }}>
+        {["A1", "A2", "A3", "A4"].map((seat) => (
+          <button
+            key={seat}
+            onClick={() => handleSeatClick(seat)}
+            disabled={bookedSeats.includes(seat)}
+            style={{
+              margin: "5px",
+              backgroundColor: bookedSeats.includes(seat)
+                ? "red"
+                : selectedSeats.includes(seat)
+                  ? "green"
+                  : "gray",
+              color: "white",
+            }}
+          >
+            {seat}
+          </button>
+        ))}
+>>>>>>> 2c786817f667e05858eac78b664c450b8e39526d
       </div>
 
       {loading ? (
