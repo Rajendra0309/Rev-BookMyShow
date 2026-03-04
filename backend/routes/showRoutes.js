@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 const {
     createShow,
@@ -8,16 +9,16 @@ const {
     cancelShow
 } = require('../controllers/showController');
 
-// Create new show
-router.post('/create', createShow);
+// Create new show — Admin only
+router.post('/create', protect, adminOnly, createShow);
 
-// Get all shows
-router.get('/', getAllShows);
+// Get all shows — any logged-in user
+router.get('/', protect, getAllShows);
 
-// Get single show
-router.get('/:id', getShowById);
+// Get single show — any logged-in user
+router.get('/:id', protect, getShowById);
 
-// Cancel show
-router.put('/cancel/:id', cancelShow);
+// Cancel show — Admin only
+router.put('/cancel/:id', protect, adminOnly, cancelShow);
 
 module.exports = router;

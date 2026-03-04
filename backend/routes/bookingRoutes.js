@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-const { 
+const {
     createBooking,
     getBookingsByUser,
     cancelBooking,
@@ -9,19 +10,19 @@ const {
     deleteAllBookings
 } = require('../controllers/bookingController');
 
-// Create booking
-router.post('/create', createBooking);
+// Create booking — logged-in user only
+router.post('/create', protect, createBooking);
 
-// Get booking history by user
-router.get('/user/:userId', getBookingsByUser);
+// Get booking history — user sees only their own
+router.get('/user/:userId', protect, getBookingsByUser);
 
 // Cancel booking
-router.put('/cancel/:id', cancelBooking);
+router.put('/cancel/:id', protect, cancelBooking);
 
-// Seat availability
-router.get('/availability/:showId', getSeatAvailability);
+// Seat availability — any logged-in user
+router.get('/availability/:showId', protect, getSeatAvailability);
 
-// Delete all bookings (temporary)
-router.delete('/delete-all', deleteAllBookings);
+// Delete all bookings — Admin only (testing only)
+router.delete('/delete-all', protect, adminOnly, deleteAllBookings);
 
 module.exports = router;

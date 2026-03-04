@@ -1,10 +1,9 @@
 const Notification = require('../models/Notification');
-const Booking      = require('../models/Booking');
-const BookingSeat  = require('../models/BookingSeat');
-const Show         = require('../models/Show');
-const Screen       = require('../models/Screen');
-const Movie        = require('../models/Movie');
-const Theatre      = require('../models/Theatre');
+const Booking = require('../models/Booking');
+const Show = require('../models/Show');
+const Screen = require('../models/Screen');
+const Movie = require('../models/Movie');
+const Theatre = require('../models/Theatre');
 
 /* ======================================================
    INTERNAL HELPER — Create a Notification
@@ -96,7 +95,7 @@ exports.getRevenueReport = async (req, res) => {
         // Build base date filter on bookingDate
         const dateFilter = {};
         if (startDate) dateFilter.$gte = new Date(startDate);
-        if (endDate)   dateFilter.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+        if (endDate) dateFilter.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
 
         const bookingMatch = { status: 'Confirmed' };
         if (startDate || endDate) bookingMatch.bookingDate = dateFilter;
@@ -122,7 +121,7 @@ exports.getRevenueReport = async (req, res) => {
         bookings.forEach(b => {
             const title = b.showId?.movieId?.title || 'Unknown';
             if (!movieMap[title]) movieMap[title] = { revenue: 0, bookingCount: 0 };
-            movieMap[title].revenue      += b.totalAmount || 0;
+            movieMap[title].revenue += b.totalAmount || 0;
             movieMap[title].bookingCount += 1;
         });
         const revenueByMovie = Object.entries(movieMap).map(([movieTitle, stats]) => ({
@@ -157,37 +156,20 @@ exports.getRevenueReport = async (req, res) => {
    ====================================================== */
 exports.getOccupancyReport = async (req, res) => {
     try {
-        // Count how many BookingSeats exist per show (via Booking → Show join)
-        const bookings = await Booking.find({ status: 'Confirmed' }).select('showId');
-
-        // Map showId → bookingIds
-        const showBookingMap = {};
-        bookings.forEach(b => {
-            const showKey = b.showId.toString();
-            if (!showBookingMap[showKey]) showBookingMap[showKey] = [];
-            showBookingMap[showKey].push(b._id);
-        });
-
-        // Count seats per show grouping BookingSeats by bookingId
-        const bookingIds = bookings.map(b => b._id);
-        const seatCounts = await BookingSeat.aggregate([
-            { $match: { bookingId: { $in: bookingIds } } },
-            {
-                $lookup: {
-                    from: 'bookings',
-                    localField: 'bookingId',
-                    foreignField: '_id',
-                    as: 'booking'
-                }
-            },
-            { $unwind: '$booking' },
+        // Aggregate confirmed bookings grouped by showId, sum up seats booked
+        const seatCounts = await Booking.aggregate([
+            { $match: { status: 'Confirmed' } },
             {
                 $group: {
-                    _id: '$booking.showId',
-                    seatsBooked: { $sum: 1 }
+                    _id: '$showId',
+                    seatsBooked: { $sum: { $size: '$seats' } }
                 }
             }
         ]);
+
+        if (seatCounts.length === 0) {
+            return res.status(200).json({ success: true, count: 0, data: [] });
+        }
 
         // Enrich with show/movie/screen/theatre details
         const result = await Promise.all(
@@ -229,6 +211,7 @@ exports.getOccupancyReport = async (req, res) => {
 };
 
 
+
 /* ======================================================
    BOOKING & CANCELLATION REPORT  (Admin Only)
    GET /api/reports/bookings?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
@@ -244,7 +227,7 @@ exports.getBookingReport = async (req, res) => {
         if (startDate || endDate) {
             matchFilter.bookingDate = {};
             if (startDate) matchFilter.bookingDate.$gte = new Date(startDate);
-            if (endDate)   matchFilter.bookingDate.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+            if (endDate) matchFilter.bookingDate.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
         }
 
         // Aggregate by status
@@ -260,12 +243,12 @@ exports.getBookingReport = async (req, res) => {
 
         let confirmed = 0, cancelled = 0;
         statusAgg.forEach(item => {
-            if (item._id === 'Confirmed')  confirmed  = item.count;
-            if (item._id === 'Cancelled')  cancelled  = item.count;
+            if (item._id === 'Confirmed') confirmed = item.count;
+            if (item._id === 'Cancelled') cancelled = item.count;
         });
 
-        const totalBookings     = confirmed + cancelled;
-        const cancellationRate  = totalBookings > 0
+        const totalBookings = confirmed + cancelled;
+        const cancellationRate = totalBookings > 0
             ? ((cancelled / totalBookings) * 100).toFixed(2)
             : 0;
 
@@ -275,7 +258,7 @@ exports.getBookingReport = async (req, res) => {
             {
                 $group: {
                     _id: {
-                        date:   { $dateToString: { format: '%Y-%m-%d', date: '$bookingDate' } },
+                        date: { $dateToString: { format: '%Y-%m-%d', date: '$bookingDate' } },
                         status: '$status'
                     },
                     count: { $sum: 1 }
