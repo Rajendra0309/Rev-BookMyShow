@@ -9,6 +9,7 @@ import SeatSelection from './pages/SeatSelection';
 import MovieList from './pages/MovieList';
 import MovieDetails from './pages/MovieDetails';
 import AdminCreateShow from './pages/AdminCreateShow';
+import TheatreList from './pages/TheatreList';
 // import BookingHistory from './pages/BookingHistory'; // ← uncomment when Samrudhi completes it
 
 const Protected = ({ children }) =>
