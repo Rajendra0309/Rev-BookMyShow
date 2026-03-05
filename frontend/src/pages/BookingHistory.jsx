@@ -1,4 +1,3 @@
-// latest code by samruddhi
 import { useEffect, useState } from 'react';
 import { getUser } from '../services/authService';
 import { getMyBookings, cancelBooking } from '../services/bookingService';

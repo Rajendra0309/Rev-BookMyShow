@@ -281,7 +281,9 @@ exports.cancelBooking = async (req, res) => {
         const show = await Show.findById(booking.showId);
 
         const currentDateTime = new Date();
+        const [hours, minutes] = (show.showTime || '00:00').split(':').map(Number);
         const showDateTime = new Date(show.showDate);
+        showDateTime.setHours(hours, minutes, 0, 0);
 
         if (currentDateTime > showDateTime) {
             return res.status(400).json({

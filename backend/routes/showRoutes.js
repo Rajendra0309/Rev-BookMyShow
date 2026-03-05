@@ -19,10 +19,8 @@ router.get('/', protect, getAllShows);
 // Get single show — any logged-in user
 router.get('/:id', protect, getShowById);
 
-// Cancel show — Admin only
 router.put('/cancel/:id', protect, adminOnly, cancelShow);
 
-// Update show — Admin only
-router.put('/update/:id', protect, adminOnly, updateShow);
+router.put('/:id', protect, adminOnly, updateShow);
 
 module.exports = router;
