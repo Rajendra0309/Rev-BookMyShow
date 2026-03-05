@@ -64,7 +64,7 @@ exports.getAllMovies = async (req, res) => {
 
         const total = await Movie.countDocuments(filter);
 
-        const movies = await Movie.find(filter)
+        const movies = await Movie.find({})
             .skip((pageNumber - 1) * limitNumber)
             .limit(limitNumber);
 

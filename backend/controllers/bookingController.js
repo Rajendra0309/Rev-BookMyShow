@@ -13,16 +13,15 @@ exports.createBooking = async (req, res) => {
         if (!show) {
             return res.status(404).json({ message: "Show not found" });
         }
-        // Prevent booking if show already started
+        // Prevent booking if show already started (date + time combined)
         const currentDateTime = new Date();
+        const [hours, minutes] = (show.showTime || '00:00').split(':').map(Number);
         const showDateTime = new Date(show.showDate);
-
-        // (Optional improvement: combine date + time properly later)
-        // For now we check date only
+        showDateTime.setHours(hours, minutes, 0, 0);
 
         if (currentDateTime > showDateTime) {
             return res.status(400).json({
-                message: "Cannot book. Show already started."
+                message: "Cannot book. Show has already started."
             });
         }
 
