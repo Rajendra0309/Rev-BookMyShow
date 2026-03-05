@@ -35,6 +35,6 @@ export const cancelShow = async (id) => {
 
 // ✅ Update Show  ⭐ ADD THIS
 export const updateShow = async (id, showData) => {
-  const response = await api.put(`/shows/update/${id}`, showData);
+  const response = await api.put(`/shows/${id}`, showData);
   return response.data;
 };

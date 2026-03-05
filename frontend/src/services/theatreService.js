@@ -31,3 +31,9 @@ export const deleteScreen = (screenId) =>
 // Seats
 export const getSeatsByScreen = (screenId) =>
     axios.get(`${API}/screens/${screenId}/seats`, { headers: getAuthHeader() });
+
+export const addSeats = (screenId, seats) =>
+    axios.post(`${API}/screens/${screenId}/seats`, { seats }, { headers: getAuthHeader() });
+
+export const deleteAllSeats = (screenId) =>
+    axios.delete(`${API}/screens/${screenId}/seats`, { headers: getAuthHeader() });

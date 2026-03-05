@@ -200,7 +200,7 @@ export default function Reports() {
             <div style={styles.pageHeader}>
                 <h1 style={styles.pageTitle}>{isAdmin ? '📊 Reports & Notifications' : '🔔 Notifications'}</h1>
                 <p style={styles.pageSubtitle}>
-                    {isAdmin ? 'Admin Dashboard — Revenue, Occupancy &amp; Booking Analytics' : 'Your Notification Centre'}
+                    {isAdmin ? 'Admin Dashboard — Revenue, Occupancy & Booking Analytics' : 'Your Notification Centre'}
                 </p>
             </div>
 

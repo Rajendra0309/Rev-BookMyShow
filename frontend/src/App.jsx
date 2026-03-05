@@ -86,7 +86,7 @@ function App() {
 
         <Route path="/theatres/:id" element={<Protected><TheatreDetail /></Protected>} />
 
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="*" element={<Navigate to="/movies" />} />
       </Routes>
     </BrowserRouter>
   );

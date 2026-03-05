@@ -62,13 +62,15 @@ function MovieList() {
               availableSeats: 0
             };
 
-    for (let movie of moviesList) {
-      try {
-        const shows = await getShowsByMovie(movie._id);
-        availability[movie._id] = shows?.filter(s => s.status === 'Active').length > 0;
-      } catch {
-        availability[movie._id] = false;
-      }
+          }
+
+        })
+      );
+
+      setShows(showsWithSeats);
+
+    } catch (err) {
+      console.error("Error fetching shows:", err);
     }
   };
 
@@ -91,6 +93,15 @@ function MovieList() {
     setSelectedShows(movieShows);
     setSelectedMovie(movie);
 
+  };
+
+  const getPriceLabel = (p) => {
+    if (!p) return '';
+    if (typeof p === 'number') return `₹${p}`;
+    const vals = [p.Regular, p.Premium, p.VIP].filter(v => v > 0);
+    if (!vals.length) return '';
+    const min = Math.min(...vals), max = Math.max(...vals);
+    return min === max ? `₹${min}` : `₹${min} – ₹${max}`;
   };
 
   // ───── Close modal ─────
@@ -248,7 +259,7 @@ function MovieList() {
                           </td>
 
                           <td>
-                            ₹{show.ticketPrice}
+                            {getPriceLabel(show.ticketPrice)}
                           </td>
 
                           <td>

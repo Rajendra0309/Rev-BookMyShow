@@ -13,7 +13,15 @@ import {
 } from '../services/showService';
 import {
   getAllTheatres,
-  getScreensByTheatre
+  getScreensByTheatre,
+  createTheatre,
+  updateTheatre,
+  deleteTheatre,
+  addScreenToTheatre,
+  deleteScreen,
+  getSeatsByScreen,
+  addSeats,
+  deleteAllSeats
 } from '../services/theatreService';
 import { getToken } from '../services/authService';
 
@@ -65,11 +73,31 @@ function AdminCreateShow() {
     screenId: '',
     showDate: '',
     showTime: '',
-    ticketPrice: ''
+    ticketPrice: { Regular: '', Premium: '', VIP: '' }
   });
 
   const [editingShow, setEditingShow] = useState(null);
-  const [editForm, setEditForm] = useState({ showDate: '', showTime: '', ticketPrice: '' });
+  const [editForm, setEditForm] = useState({ showDate: '', showTime: '', ticketPrice: { Regular: '', Premium: '', VIP: '' } });
+  const [editingShowId, setEditingShowId] = useState(null);
+
+  /* ================= THEATRE TAB STATES ================= */
+
+  const [theatreList, setTheatreList] = useState([]);
+  const [theatreLoading, setTheatreLoading] = useState(false);
+  const [selectedTheatreDetail, setSelectedTheatreDetail] = useState(null);
+  const [theatreScreens, setTheatreScreens] = useState([]);
+  const [expandedScreenId, setExpandedScreenId] = useState(null);
+  const [seatsByScreenId, setSeatsByScreenId] = useState({});
+  const [configuringScreenId, setConfiguringScreenId] = useState(null);
+  const [seatConfig, setSeatConfig] = useState({ rows: '', seatsPerRow: '', seatType: 'Regular' });
+
+  const [showTheatreForm, setShowTheatreForm] = useState(false);
+  const [editingTheatreId, setEditingTheatreId] = useState(null);
+  const [theatreForm, setTheatreForm] = useState({ name: '', city: '', location: '' });
+
+  const [showScreenForm, setShowScreenForm] = useState(false);
+  const [screenForm, setScreenForm] = useState({ screenName: '', totalSeats: '' });
+  const [theatreError, setTheatreError] = useState('');
 
   const token = getToken();
   const user = JSON.parse(localStorage.getItem('user'));
@@ -130,17 +158,17 @@ function AdminCreateShow() {
   //   }
   // };
   const fetchShows = async () => {
-  try {
-    const res = await getShows();
+    try {
+      const res = await getShows();
 
-    console.log("Shows API response:", res);
+      console.log("Shows API response:", res);
 
-    setShows(res || []);
-  } catch (err) {
-    console.error("Error fetching shows:", err);
-    alert("Error fetching shows");
-  }
-};
+      setShows(res || []);
+    } catch (err) {
+      console.error("Error fetching shows:", err);
+      alert("Error fetching shows");
+    }
+  };
 
   /* ================= MOVIE FUNCTIONS (UNCHANGED) ================= */
 
@@ -247,7 +275,7 @@ function AdminCreateShow() {
         screenId: '',
         showDate: '',
         showTime: '',
-        ticketPrice: ''
+        ticketPrice: { Regular: '', Premium: '', VIP: '' }
       });
 
       setSelectedMovieForShow(null);
@@ -280,13 +308,149 @@ function AdminCreateShow() {
 
       setShowForm({
         screenId: show.screenId?._id || "",
-        showDate: show.showDate?.split("T")[0],
-        showTime: show.showTime,
-        ticketPrice: show.ticketPrice
+        showDate: show.showDate ? new Date(show.showDate).toISOString().split('T')[0] : '',
+        showTime: show.showTime || '',
+        ticketPrice: {
+          Regular: show.ticketPrice?.Regular || '',
+          Premium: show.ticketPrice?.Premium || '',
+          VIP: show.ticketPrice?.VIP || ''
+        }
       });
 
     } catch (err) {
       console.error("Error loading screens:", err);
+    }
+  };
+
+  /* ================= THEATRE TAB HANDLERS ================= */
+
+  const fetchTheatreList = async () => {
+    setTheatreLoading(true);
+    try {
+      const res = await getAllTheatres();
+      setTheatreList(res.data.data || res.data || []);
+    } catch {
+      setTheatreError('Failed to load theatres.');
+    } finally {
+      setTheatreLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'theatre') fetchTheatreList();
+  }, [activeTab]);
+
+  const handleCreateTheatre = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingTheatreId) {
+        await updateTheatre(editingTheatreId, theatreForm);
+      } else {
+        await createTheatre(theatreForm);
+      }
+      setTheatreForm({ name: '', city: '', location: '' });
+      setEditingTheatreId(null);
+      setShowTheatreForm(false);
+      fetchTheatreList();
+    } catch (err) {
+      setTheatreError(err.response?.data?.message || 'Error saving theatre.');
+    }
+  };
+
+  const handleEditTheatre = (t) => {
+    setTheatreForm({ name: t.name, city: t.city, location: t.location || '' });
+    setEditingTheatreId(t._id);
+    setShowTheatreForm(true);
+  };
+
+  const handleDeleteTheatre = async (id) => {
+    if (!window.confirm('Delete this theatre and all its screens?')) return;
+    try {
+      await deleteTheatre(id);
+      if (selectedTheatreDetail?._id === id) setSelectedTheatreDetail(null);
+      fetchTheatreList();
+    } catch {
+      setTheatreError('Failed to delete theatre.');
+    }
+  };
+
+  const handleSelectTheatreDetail = async (t) => {
+    setSelectedTheatreDetail(t);
+    setShowScreenForm(false);
+    setExpandedScreenId(null);
+    setSeatsByScreenId({});
+    try {
+      const res = await getScreensByTheatre(t._id);
+      setTheatreScreens(res.data.data || res.data || []);
+    } catch {
+      setTheatreError('Failed to load screens.');
+    }
+  };
+
+  const handleAddScreen = async (e) => {
+    e.preventDefault();
+    try {
+      await addScreenToTheatre(selectedTheatreDetail._id, {
+        screenName: screenForm.screenName,
+        totalSeats: Number(screenForm.totalSeats)
+      });
+      setScreenForm({ screenName: '', totalSeats: '' });
+      setShowScreenForm(false);
+      handleSelectTheatreDetail(selectedTheatreDetail);
+    } catch (err) {
+      setTheatreError(err.response?.data?.message || 'Failed to add screen.');
+    }
+  };
+
+  const handleDeleteScreen = async (screenId) => {
+    if (!window.confirm('Delete this screen and all its seats?')) return;
+    try {
+      await deleteScreen(screenId);
+      handleSelectTheatreDetail(selectedTheatreDetail);
+    } catch {
+      setTheatreError('Failed to delete screen.');
+    }
+  };
+
+  const toggleSeats = async (screenId) => {
+    if (expandedScreenId === screenId) { setExpandedScreenId(null); return; }
+    setExpandedScreenId(screenId);
+    setConfiguringScreenId(null);
+    if (!seatsByScreenId[screenId]) {
+      try {
+        const res = await getSeatsByScreen(screenId);
+        setSeatsByScreenId(prev => ({ ...prev, [screenId]: res.data.data || res.data || [] }));
+      } catch {
+        setSeatsByScreenId(prev => ({ ...prev, [screenId]: [] }));
+      }
+    }
+  };
+
+  const handleConfigureSeats = async (e, screen) => {
+    e.preventDefault();
+    const rows = seatConfig.rows.toUpperCase().replace(/\s/g, '').split(',').filter(Boolean);
+    const perRow = parseInt(seatConfig.seatsPerRow);
+    if (!rows.length || isNaN(perRow) || perRow < 1) { setTheatreError('Enter valid rows and seats per row.'); return; }
+    const seats = [];
+    rows.forEach(row => { for (let i = 1; i <= perRow; i++) seats.push({ seatNumber: `${row}${i}`, seatType: seatConfig.seatType }); });
+    try {
+      await addSeats(screen._id, seats);
+      const res = await getSeatsByScreen(screen._id);
+      setSeatsByScreenId(prev => ({ ...prev, [screen._id]: res.data.data || res.data || [] }));
+      setConfiguringScreenId(null);
+      setSeatConfig({ rows: '', seatsPerRow: '', seatType: 'Regular' });
+    } catch (err) {
+      setTheatreError(err.response?.data?.message || 'Failed to add seats.');
+    }
+  };
+
+  const handleDeleteAllSeats = async (screenId) => {
+    if (!window.confirm('Delete ALL seats for this screen?')) return;
+    try {
+      await deleteAllSeats(screenId);
+      setSeatsByScreenId(prev => ({ ...prev, [screenId]: [] }));
+    } catch {
+      setTheatreError('Failed to delete seats.');
     }
   };
 
@@ -319,7 +483,7 @@ function AdminCreateShow() {
       screenId: '',
       showDate: '',
       showTime: '',
-      ticketPrice: ''
+      ticketPrice: { Regular: '', Premium: '', VIP: '' }
     });
   };
 
@@ -342,7 +506,7 @@ function AdminCreateShow() {
       screenId: '',
       showDate: '',
       showTime: '',
-      ticketPrice: ''
+      ticketPrice: { Regular: '', Premium: '', VIP: '' }
     });
   };
 
@@ -387,6 +551,13 @@ function AdminCreateShow() {
           onClick={() => setActiveTab('show')}
         >
           Show Management
+        </button>
+
+        <button
+          className={`btn ms-2 ${activeTab === 'theatre' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setActiveTab('theatre')}
+        >
+          Theatre Management
         </button>
       </div>
 
@@ -543,7 +714,7 @@ function AdminCreateShow() {
 
           {/* LEFT COLUMN – MOVIES */}
           <div className="col-md-6">
-            
+
             <h4>Movies</h4>
 
             <input
@@ -616,13 +787,14 @@ function AdminCreateShow() {
                     <td>{show.showTime}</td>
                     <td>{show.status}</td>
                     <td>
+                      {show.status === 'Active' && (
                         <button
                           className="btn btn-warning btn-sm me-2"
                           onClick={() => handleEditShow(show)}
                         >
                           Edit
                         </button>
-
+                      )}
                       {show.status === 'Active' && (
                         <button
                           className="btn btn-danger btn-sm"
@@ -636,6 +808,175 @@ function AdminCreateShow() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+        </div>
+      )}
+
+      {/* ================= THEATRE TAB ================= */}
+      {activeTab === 'theatre' && (
+        <div className="row g-4">
+
+          {/* LEFT — Theatre List */}
+          <div className="col-md-5">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h4 className="mb-0">Theatres</h4>
+              <button className="btn btn-danger btn-sm" onClick={() => { setShowTheatreForm(!showTheatreForm); setEditingTheatreId(null); setTheatreForm({ name: '', city: '', location: '' }); }}>
+                {showTheatreForm && !editingTheatreId ? 'Cancel' : '+ Add Theatre'}
+              </button>
+            </div>
+
+            {theatreError && <div className="alert alert-danger alert-dismissible py-2">{theatreError}<button className="btn-close" onClick={() => setTheatreError('')}></button></div>}
+
+            {showTheatreForm && (
+              <form onSubmit={handleCreateTheatre} className="card p-3 mb-3 shadow-sm">
+                <h6>{editingTheatreId ? 'Edit Theatre' : 'New Theatre'}</h6>
+                <input className="form-control mb-2" placeholder="Theatre Name" required
+                  value={theatreForm.name} onChange={e => setTheatreForm({ ...theatreForm, name: e.target.value })} />
+                <input className="form-control mb-2" placeholder="City" required
+                  value={theatreForm.city} onChange={e => setTheatreForm({ ...theatreForm, city: e.target.value })} />
+                <input className="form-control mb-2" placeholder="Location (optional)"
+                  value={theatreForm.location} onChange={e => setTheatreForm({ ...theatreForm, location: e.target.value })} />
+                <button className="btn btn-success btn-sm" type="submit">{editingTheatreId ? 'Update' : 'Create'} Theatre</button>
+              </form>
+            )}
+
+            {theatreLoading ? <p>Loading...</p> : theatreList.length === 0 ? (
+              <p className="text-muted">No theatres yet.</p>
+            ) : (
+              theatreList.map(t => (
+                <div key={t._id}
+                  className={`card mb-2 shadow-sm ${selectedTheatreDetail?._id === t._id ? 'border-primary' : ''}`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleSelectTheatreDetail(t)}
+                >
+                  <div className="card-body py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong>{t.name}</strong>
+                      <div className="text-muted small">{t.city}{t.location ? ` — ${t.location}` : ''}</div>
+                    </div>
+                    <div className="d-flex gap-1" onClick={e => e.stopPropagation()}>
+                      <button className="btn btn-warning btn-sm" onClick={() => handleEditTheatre(t)}>Edit</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDeleteTheatre(t._id)}>Del</button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* RIGHT — Screens + Seats for selected theatre */}
+          <div className="col-md-7">
+            {!selectedTheatreDetail ? (
+              <div className="text-muted mt-5 text-center">
+                <h5>← Select a theatre to manage its screens and seats</h5>
+              </div>
+            ) : (
+              <>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h5 className="mb-0">🎬 {selectedTheatreDetail.name} — Screens</h5>
+                  <button className="btn btn-success btn-sm" onClick={() => setShowScreenForm(!showScreenForm)}>
+                    {showScreenForm ? 'Cancel' : '+ Add Screen'}
+                  </button>
+                </div>
+
+                {showScreenForm && (
+                  <form onSubmit={handleAddScreen} className="card p-3 mb-3 shadow-sm">
+                    <h6>New Screen</h6>
+                    <input className="form-control mb-2" placeholder="Screen Name (e.g. Screen 1)" required
+                      value={screenForm.screenName} onChange={e => setScreenForm({ ...screenForm, screenName: e.target.value })} />
+                    <input type="number" className="form-control mb-2" placeholder="Total Seats (e.g. 100)" required
+                      value={screenForm.totalSeats} onChange={e => setScreenForm({ ...screenForm, totalSeats: e.target.value })} />
+                    <button className="btn btn-success btn-sm" type="submit">Add Screen</button>
+                  </form>
+                )}
+
+                {theatreScreens.length === 0 ? (
+                  <p className="text-muted">No screens added yet.</p>
+                ) : (
+                  theatreScreens.map(screen => (
+                    <div key={screen._id} className="card mb-3 shadow-sm">
+                      <div className="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>{screen.screenName}</strong>
+                          <span className="text-muted small ms-2">({screen.totalSeats} seats)</span>
+                        </div>
+                        <div className="d-flex gap-2">
+                          <button className="btn btn-outline-secondary btn-sm" onClick={() => toggleSeats(screen._id)}>
+                            {expandedScreenId === screen._id ? 'Hide Seats' : 'View Seats'}
+                          </button>
+                          <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteScreen(screen._id)}>Delete</button>
+                        </div>
+                      </div>
+
+                      {expandedScreenId === screen._id && (
+                        <div className="card-footer">
+                          {(seatsByScreenId[screen._id] || []).length === 0 ? (
+                            <p className="text-muted small mb-2">No seats configured.</p>
+                          ) : (
+                            <div className="d-flex flex-wrap gap-1 mb-2">
+                              {(seatsByScreenId[screen._id] || []).map(seat => (
+                                <span key={seat._id} className={`badge ${seat.seatType === 'VIP' ? 'bg-warning text-dark' :
+                                    seat.seatType === 'Premium' ? 'bg-info text-dark' : 'bg-secondary'
+                                  }`}>{seat.seatNumber}</span>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="d-flex gap-2 flex-wrap">
+                            <button className="btn btn-sm btn-outline-primary"
+                              onClick={() => setConfiguringScreenId(configuringScreenId === screen._id ? null : screen._id)}>
+                              {configuringScreenId === screen._id ? 'Cancel' : '⚙ Configure Seats'}
+                            </button>
+                            {(seatsByScreenId[screen._id] || []).length > 0 && (
+                              <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAllSeats(screen._id)}>
+                                🗑 Clear All
+                              </button>
+                            )}
+                          </div>
+
+                          {configuringScreenId === screen._id && (
+                            <form onSubmit={e => handleConfigureSeats(e, screen)} className="mt-3 p-3 border rounded bg-light">
+                              <h6 className="mb-3">Generate Seats — {screen.screenName}</h6>
+                              <div className="row g-2 mb-2">
+                                <div className="col-5">
+                                  <label className="form-label small">Rows (e.g. A,B,C)</label>
+                                  <input className="form-control form-control-sm" placeholder="A,B,C,D"
+                                    value={seatConfig.rows}
+                                    onChange={e => setSeatConfig({ ...seatConfig, rows: e.target.value })} required />
+                                </div>
+                                <div className="col-4">
+                                  <label className="form-label small">Seats per Row</label>
+                                  <input type="number" className="form-control form-control-sm" placeholder="10"
+                                    value={seatConfig.seatsPerRow}
+                                    onChange={e => setSeatConfig({ ...seatConfig, seatsPerRow: e.target.value })} required />
+                                </div>
+                                <div className="col-3">
+                                  <label className="form-label small">Type</label>
+                                  <select className="form-select form-select-sm"
+                                    value={seatConfig.seatType}
+                                    onChange={e => setSeatConfig({ ...seatConfig, seatType: e.target.value })}>
+                                    <option>Regular</option>
+                                    <option>Premium</option>
+                                    <option>VIP</option>
+                                  </select>
+                                </div>
+                              </div>
+                              {seatConfig.rows && seatConfig.seatsPerRow && (
+                                <p className="text-muted small mb-2">
+                                  Preview: {seatConfig.rows.split(',').filter(Boolean).length * parseInt(seatConfig.seatsPerRow || 0)} seats total
+                                </p>
+                              )}
+                              <button type="submit" className="btn btn-success btn-sm">Add Seats</button>
+                            </form>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </>
+            )}
           </div>
 
         </div>
@@ -713,16 +1054,22 @@ function AdminCreateShow() {
                     required
                   />
 
-                  <input
-                    type="number"
-                    className="form-control mb-3"
-                    placeholder="Ticket Price"
-                    value={showForm.ticketPrice}
-                    onChange={(e) =>
-                      setShowForm({ ...showForm, ticketPrice: e.target.value })
-                    }
-                    required
-                  />
+                  <label className="form-label small text-muted">Prices</label>
+                  <div className="row g-2 mb-3">
+                    {['Regular', 'Premium', 'VIP'].map(type => (
+                      <div className="col-4" key={type}>
+                        <label className="form-label small">{type} (₹)</label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          placeholder={type === 'Regular' ? '150' : type === 'Premium' ? '250' : '400'}
+                          value={showForm.ticketPrice[type]}
+                          onChange={(e) => setShowForm({ ...showForm, ticketPrice: { ...showForm.ticketPrice, [type]: e.target.value } })}
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
 
                   {/* <button className="btn btn-success w-100">
                     Create Show
@@ -764,15 +1111,21 @@ function AdminCreateShow() {
                     onChange={(e) => setEditForm({ ...editForm, showTime: e.target.value })}
                     required
                   />
-                  <label className="form-label small text-muted">Ticket Price</label>
-                  <input
-                    type="number"
-                    className="form-control mb-3"
-                    placeholder="Ticket Price"
-                    value={editForm.ticketPrice}
-                    onChange={(e) => setEditForm({ ...editForm, ticketPrice: e.target.value })}
-                    required
-                  />
+                  <label className="form-label small text-muted">Prices</label>
+                  <div className="row g-2 mb-3">
+                    {['Regular', 'Premium', 'VIP'].map(type => (
+                      <div className="col-4" key={type}>
+                        <label className="form-label small">{type} (₹)</label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={editForm.ticketPrice[type] || ''}
+                          onChange={(e) => setEditForm({ ...editForm, ticketPrice: { ...editForm.ticketPrice, [type]: e.target.value } })}
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
                   <button className="btn btn-success w-100">Update Show</button>
                 </form>
               </div>

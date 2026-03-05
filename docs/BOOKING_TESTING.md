@@ -50,7 +50,11 @@ Header → Authorization: Bearer <admin_token>
   "screenId": "<copy from GET /api/theatres/:id/screens>",
   "showDate": "2026-03-10",
   "showTime": "18:00",
-  "ticketPrice": 200
+  "ticketPrice": {
+    "Regular": 150,
+    "Premium": 250,
+    "VIP": 400
+  }
 }
 ```
 ✅ Returns: Show object with `_id`  

@@ -17,7 +17,7 @@ export default function Navbar() {
             <div className='d-flex align-items-center gap-3'>
                 {user ? (
                     <>
-                        {/* Common link */}
+                        {/* Common links */}
                         <Link className='text-white text-decoration-none' to="/movies">Movies</Link>
 
                         {/* Admin-only links */}
@@ -34,9 +34,10 @@ export default function Navbar() {
 
                         {/* Customer-only links */}
                         {!isAdmin && (
-                            <Link className='text-white text-decoration-none' to="/bookings">
-                                My Bookings
-                            </Link>
+                            <Link className='text-white text-decoration-none' to="/theatres">Theatres</Link>
+                        )}
+                        {!isAdmin && (
+                            <Link className='text-white text-decoration-none' to="/bookings">My Bookings</Link>
                         )}
                         {!isAdmin && (
                             <Link className='text-white text-decoration-none' to="/reports">

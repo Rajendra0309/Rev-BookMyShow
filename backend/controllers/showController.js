@@ -40,7 +40,11 @@ exports.createShow = async (req, res) => {
             screenId,
             showDate,
             showTime,
-            ticketPrice
+            ticketPrice: {
+                Regular: Number(ticketPrice?.Regular || 0),
+                Premium: Number(ticketPrice?.Premium || 0),
+                VIP: Number(ticketPrice?.VIP || 0)
+            }
         });
 
         await newShow.save();
@@ -128,50 +132,6 @@ exports.cancelShow = async (req, res) => {
 };
 
 
-// ================= UPDATE SHOW =================
-exports.updateShow = async (req, res) => {
-    try {
-
-        const { screenId, showDate, showTime, ticketPrice } = req.body;
-
-        const show = await Show.findById(req.params.id);
-
-        if (!show) {
-            return res.status(404).json({ message: "Show not found" });
-        }
-
-        // Prevent duplicate show during update
-        const existingShow = await Show.findOne({
-            screenId,
-            showDate,
-            showTime,
-            _id: { $ne: req.params.id }
-        });
-
-        if (existingShow) {
-            return res.status(400).json({
-                message: "Another show already exists at this time."
-            });
-        }
-
-        // Update fields
-        if (screenId) show.screenId = screenId;
-        if (showDate) show.showDate = showDate;
-        if (showTime) show.showTime = showTime;
-        if (ticketPrice) show.ticketPrice = ticketPrice;
-
-        await show.save();
-
-        res.status(200).json({
-            message: "Show updated successfully",
-            show
-        });
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
 exports.updateShow = async (req, res) => {
     try {
         const show = await Show.findById(req.params.id);
@@ -185,9 +145,27 @@ exports.updateShow = async (req, res) => {
         }
 
         const { showDate, showTime, ticketPrice } = req.body;
+
+        const existingShow = await Show.findOne({
+            screenId: show.screenId,
+            showDate: showDate || show.showDate,
+            showTime: showTime || show.showTime,
+            _id: { $ne: req.params.id }
+        });
+
+        if (existingShow) {
+            return res.status(400).json({ message: "Another show already exists at this time." });
+        }
+
         if (showDate) show.showDate = showDate;
         if (showTime) show.showTime = showTime;
-        if (ticketPrice) show.ticketPrice = ticketPrice;
+        if (ticketPrice) {
+            show.ticketPrice = {
+                Regular: Number(ticketPrice?.Regular ?? show.ticketPrice?.Regular ?? 0),
+                Premium: Number(ticketPrice?.Premium ?? show.ticketPrice?.Premium ?? 0),
+                VIP: Number(ticketPrice?.VIP ?? show.ticketPrice?.VIP ?? 0)
+            };
+        }
 
         await show.save();
 
