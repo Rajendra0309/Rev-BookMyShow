@@ -6,7 +6,8 @@ const {
     createShow,
     getAllShows,
     getShowById,
-    cancelShow
+    cancelShow,
+    updateShow
 } = require('../controllers/showController');
 
 // Create new show — Admin only
@@ -20,5 +21,8 @@ router.get('/:id', protect, getShowById);
 
 // Cancel show — Admin only
 router.put('/cancel/:id', protect, adminOnly, cancelShow);
+
+// Update show — Admin only
+router.put('/update/:id', protect, adminOnly, updateShow);
 
 module.exports = router;

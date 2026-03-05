@@ -10,6 +10,7 @@ import MovieList from './pages/MovieList';
 import MovieDetails from './pages/MovieDetails';
 import AdminCreateShow from './pages/AdminCreateShow';
 import TheatreList from './pages/TheatreList';
+import TheatreDetail from './pages/TheatreDetail';
 // import BookingHistory from './pages/BookingHistory'; // ← uncomment when Samrudhi completes it
 
 const Protected = ({ children }) =>
@@ -72,7 +73,26 @@ function App() {
         {/* Booking History — uncomment import above when Samrudhi completes BookingHistory.jsx */}
         <Route path="/bookings" element={<Protected><ComingSoon name="Booking History" /></Protected>} />
 
+        <Route
+          path="/booking/:showId"
+          element={
+            <Protected>
+              <SeatSelection />
+            </Protected>
+          }
+        />
+
         <Route path="/theatres" element={<Protected><TheatreList /></Protected>} />
+
+        <Route
+          path="/theatres/:id"
+          element={
+            <Protected>
+              <TheatreDetail />
+            </Protected>
+          }
+        />
+        
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
