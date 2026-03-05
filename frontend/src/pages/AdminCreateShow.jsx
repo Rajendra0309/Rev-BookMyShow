@@ -1,301 +1,3 @@
-// import { useEffect, useState } from 'react';
-// import {
-//   getMovies,
-//   createMovie,
-//   updateMovie,
-//   deleteMovie
-// } from '../services/movieService';
-// import { getToken } from '../services/authService';
-
-// function AdminCreateShow() {
-//   const [movies, setMovies] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [editingId, setEditingId] = useState(null);
-//   const [selectedMovie, setSelectedMovie] = useState(null); // ✅ moved here
-
-//   const [search, setSearch] = useState({
-//     search: '',
-//     page: 1,
-//     limit: 5
-//   });
-
-//   const [formData, setFormData] = useState({
-//     title: '',
-//     genre: '',
-//     language: '',
-//     duration: '',
-//     rating: '',
-//     description: ''
-//   });
-
-//   const [pagination, setPagination] = useState({
-//     total: 0,
-//     totalPages: 1
-//   });
-
-//   const token = getToken();
-//   const user = JSON.parse(localStorage.getItem('user'));
-
-//   useEffect(() => {
-//     fetchMovies();
-//   }, [search.page]);
-
-//   const fetchMovies = async () => {
-//     setLoading(true);
-//     try {
-//       const data = await getMovies(search);
-//       setMovies(data.data);
-//       setPagination({
-//         total: data.total,
-//         totalPages: data.totalPages
-//       });
-//     } catch (err) {
-//       alert('Error fetching movies');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleSearch = () => {
-//     setSearch({ ...search, page: 1 });
-//     fetchMovies();
-//   };
-
-//   const handleFormChange = (e) => {
-//     setFormData({ ...formData, [e.target.name]: e.target.value });
-//   };
-
-//   const resetForm = () => {
-//     setFormData({
-//       title: '',
-//       genre: '',
-//       language: '',
-//       duration: '',
-//       rating: '',
-//       description: ''
-//     });
-//     setEditingId(null);
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     const movieData = {
-//       ...formData,
-//       genre: formData.genre.split(',').map(g => g.trim())
-//     };
-
-//     try {
-//       if (editingId) {
-//         await updateMovie(editingId, movieData);
-//         alert('Movie updated successfully');
-//       } else {
-//         await createMovie(movieData);
-//         alert('Movie created successfully');
-//       }
-
-//       resetForm();
-//       fetchMovies();
-//     } catch (err) {
-//       alert(err.response?.data?.message || 'Error occurred');
-//     }
-//   };
-
-//   const handleEdit = (movie) => {
-//     setFormData({
-//       title: movie.title,
-//       genre: movie.genre.join(', '),
-//       language: movie.language,
-//       duration: movie.duration,
-//       rating: movie.rating,
-//       description: movie.description
-//     });
-//     setEditingId(movie._id);
-//   };
-
-//   const handleDelete = async (id) => {
-//     if (!window.confirm('Are you sure?')) return;
-//     await deleteMovie(id);
-//     fetchMovies();
-//   };
-
-//   const handleViewDetails = (movie) => {
-//     setSelectedMovie(movie);
-//   };
-
-//   const changePage = (newPage) => {
-//     setSearch({ ...search, page: newPage });
-//   };
-
-//   if (!token || user?.role !== 'Admin') {
-//     return (
-//       <div className="container mt-5 text-center">
-//         <h4>Access Denied</h4>
-//         <p className="text-danger">Admins only.</p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container mt-5">
-//       <h2>Admin Movie Management</h2>
-
-//       {/* Search */}
-//       <div className="card p-3 mb-4">
-//         <div className="row">
-//           <div className="col-md-10">
-//             <input
-//               type="text"
-//               placeholder="Search by title, language, or genre..."
-//               className="form-control"
-//               value={search.search}
-//               onChange={(e) =>
-//                 setSearch({ ...search, search: e.target.value })
-//               }
-//             />
-//           </div>
-//           <div className="col-md-2">
-//             <button className="btn btn-primary w-100" onClick={handleSearch}>
-//               Search
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Form */}
-//       <form onSubmit={handleSubmit} className="card p-4 mb-4">
-//         <h5>{editingId ? 'Update Movie' : 'Create Movie'}</h5>
-
-//         <input name="title" placeholder="Title" className="form-control mb-2"
-//           value={formData.title} onChange={handleFormChange} required />
-
-//         <input name="genre" placeholder="Genre (comma separated)"
-//           className="form-control mb-2"
-//           value={formData.genre} onChange={handleFormChange} />
-
-//         <input name="language" placeholder="Language"
-//           className="form-control mb-2"
-//           value={formData.language} onChange={handleFormChange} />
-
-//         <input type="number" name="duration" placeholder="Duration"
-//           className="form-control mb-2"
-//           value={formData.duration} onChange={handleFormChange} />
-
-//         <input type="number" name="rating" placeholder="Rating (0-10)"
-//           className="form-control mb-2"
-//           value={formData.rating} onChange={handleFormChange} />
-
-//         <textarea name="description" placeholder="Description"
-//           className="form-control mb-2"
-//           value={formData.description} onChange={handleFormChange} />
-
-//         <button className="btn btn-success">
-//           {editingId ? 'Update Movie' : 'Create Movie'}
-//         </button>
-//       </form>
-
-//       {/* Table */}
-//       {loading ? <p>Loading...</p> : (
-//         <>
-//           <table className="table table-bordered">
-//             <thead>
-//               <tr>
-//                 <th>Title</th>
-//                 <th>Language</th>
-//                 <th>Rating</th>
-//                 <th>Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {movies.map((movie) => (
-//                 <tr key={movie._id}>
-//                   <td>{movie.title}</td>
-//                   <td>{movie.language}</td>
-//                   <td>{movie.rating}</td>
-//                   <td>
-//                     <button
-//                       className="btn btn-info btn-sm me-2"
-//                       onClick={() => handleViewDetails(movie)}
-//                     >
-//                       Details
-//                     </button>
-
-//                     <button
-//                       className="btn btn-warning btn-sm me-2"
-//                       onClick={() => handleEdit(movie)}
-//                     >
-//                       Edit
-//                     </button>
-
-//                     <button
-//                       className="btn btn-danger btn-sm"
-//                       onClick={() => handleDelete(movie._id)}
-//                     >
-//                       Delete
-//                     </button>
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-
-//           {/* Pagination */}
-//           <div className="d-flex justify-content-center">
-//             {Array.from({ length: pagination.totalPages }, (_, i) => (
-//               <button
-//                 key={i}
-//                 className={`btn btn-sm mx-1 ${
-//                   search.page === i + 1 ? 'btn-primary' : 'btn-outline-primary'
-//                 }`}
-//                 onClick={() => changePage(i + 1)}
-//               >
-//                 {i + 1}
-//               </button>
-//             ))}
-//           </div>
-//         </>
-//       )}
-
-//       {/* Details Modal */}
-//       {selectedMovie && (
-//         <div className="modal d-block">
-//           <div className="modal-dialog">
-//             <div className="modal-content">
-//               <div className="modal-header">
-//                 <h5 className="modal-title">Movie Details</h5>
-//                 <button
-//                   className="btn-close"
-//                   onClick={() => setSelectedMovie(null)}
-//                 ></button>
-//               </div>
-//               <div className="modal-body">
-//                 <p><strong>Title:</strong> {selectedMovie.title}</p>
-//                 <p><strong>Language:</strong> {selectedMovie.language}</p>
-//                 <p><strong>Genre:</strong> {selectedMovie.genre.join(', ')}</p>
-//                 <p><strong>Duration:</strong> {selectedMovie.duration} minutes</p>
-//                 <p><strong>Rating:</strong> {selectedMovie.rating}</p>
-//                 <p><strong>Description:</strong> {selectedMovie.description}</p>
-//                 <p><strong>Status:</strong> {selectedMovie.status}</p>
-//               </div>
-//               <div className="modal-footer">
-//                 <button
-//                   className="btn btn-secondary"
-//                   onClick={() => setSelectedMovie(null)}
-//                 >
-//                   Close
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default AdminCreateShow;
-
-// new code for movie and show
 import { useEffect, useState } from 'react';
 import {
   getMovies,
@@ -307,7 +9,11 @@ import {
   createShow,
   getShows,
   cancelShow
-} from '../services/showService';
+} from '../services/bookingService';
+import {
+  getAllTheatres,
+  getScreensByTheatre
+} from '../services/theatreService';
 import { getToken } from '../services/authService';
 
 function AdminCreateShow() {
@@ -346,6 +52,11 @@ function AdminCreateShow() {
   const [shows, setShows] = useState([]);
   const [selectedMovieForShow, setSelectedMovieForShow] = useState(null);
 
+  // Theatre → Screen cascade for show creation
+  const [theatres, setTheatres] = useState([]);
+  const [screenOptions, setScreenOptions] = useState([]);
+  const [selectedTheatreId, setSelectedTheatreId] = useState('');
+
   const [showForm, setShowForm] = useState({
     screenId: '',
     showDate: '',
@@ -382,7 +93,26 @@ function AdminCreateShow() {
 
   useEffect(() => {
     fetchShows();
+    fetchTheatres();
   }, []);
+
+  const fetchTheatres = async () => {
+    try {
+      const res = await getAllTheatres();
+      setTheatres(res.data.data || []);
+    } catch { /* silent */ }
+  };
+
+  const handleTheatreChange = async (theatreId) => {
+    setSelectedTheatreId(theatreId);
+    setShowForm(f => ({ ...f, screenId: '' }));
+    setScreenOptions([]);
+    if (!theatreId) return;
+    try {
+      const res = await getScreensByTheatre(theatreId);
+      setScreenOptions(res.data.data || res.data || []);
+    } catch { /* silent */ }
+  };
 
   const fetchShows = async () => {
     try {
@@ -514,16 +244,15 @@ function AdminCreateShow() {
 
   const openShowModal = (movie) => {
     setSelectedMovieForShow(movie);
+    setSelectedTheatreId('');
+    setScreenOptions([]);
   };
 
   const closeShowModal = () => {
     setSelectedMovieForShow(null);
-    setShowForm({
-      screenId: '',
-      showDate: '',
-      showTime: '',
-      ticketPrice: ''
-    });
+    setSelectedTheatreId('');
+    setScreenOptions([]);
+    setShowForm({ screenId: '', showDate: '', showTime: '', ticketPrice: '' });
   };
 
 
@@ -793,15 +522,32 @@ function AdminCreateShow() {
               <div className="modal-body">
                 <form onSubmit={handleCreateShow}>
 
-                  <input
-                    className="form-control mb-2"
-                    placeholder="Screen ID"
+                  {/* Theatre dropdown */}
+                  <label className="form-label small text-muted">Select Theatre</label>
+                  <select
+                    className="form-select mb-2"
+                    value={selectedTheatreId}
+                    onChange={(e) => handleTheatreChange(e.target.value)}
+                    required>
+                    <option value="">-- Choose Theatre --</option>
+                    {theatres.map(t => (
+                      <option key={t._id} value={t._id}>{t.name} — {t.city}</option>
+                    ))}
+                  </select>
+
+                  {/* Screen dropdown (loads after theatre selected) */}
+                  <label className="form-label small text-muted">Select Screen</label>
+                  <select
+                    className="form-select mb-2"
                     value={showForm.screenId}
-                    onChange={(e) =>
-                      setShowForm({ ...showForm, screenId: e.target.value })
-                    }
-                    required
-                  />
+                    onChange={(e) => setShowForm({ ...showForm, screenId: e.target.value })}
+                    disabled={!selectedTheatreId}
+                    required>
+                    <option value="">{selectedTheatreId ? '-- Choose Screen --' : 'Select a theatre first'}</option>
+                    {screenOptions.map(s => (
+                      <option key={s._id} value={s._id}>{s.screenName} ({s.totalSeats} seats)</option>
+                    ))}
+                  </select>
 
                   <input
                     type="date"
