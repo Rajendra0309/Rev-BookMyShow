@@ -32,3 +32,9 @@ export const cancelShow = async (id) => {
   const response = await api.put(`/shows/cancel/${id}`);
   return response.data;
 };
+
+// ✅ Update Show  ⭐ ADD THIS
+export const updateShow = async (id, showData) => {
+  const response = await api.put(`/shows/update/${id}`, showData);
+  return response.data;
+};

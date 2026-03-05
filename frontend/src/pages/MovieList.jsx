@@ -1,37 +1,66 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { getMovies, getShowsByMovie } from '../services/movieService';
-import { getToken } from '../services/authService';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getMovies } from "../services/movieService";
+import { getShows } from "../services/showService";
+import { checkSeatAvailability } from "../services/bookingService";
 
 function MovieList() {
+
   const [movies, setMovies] = useState([]);
-  const [showAvailability, setShowAvailability] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [shows, setShows] = useState([]);
+  const [selectedShows, setSelectedShows] = useState([]);
+  const [selectedMovie, setSelectedMovie] = useState(null);
 
   const navigate = useNavigate();
-  const token = getToken();
 
   useEffect(() => {
     fetchMovies();
+    fetchShows();
   }, []);
 
+  // ───── Fetch Movies ─────
   const fetchMovies = async () => {
     try {
       const data = await getMovies();
-      const moviesList = data.data || [];
-      setMovies(moviesList);
-
-      // Check show availability for each movie
-      checkShows(moviesList);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+      setMovies(data.data || []);
+    } catch (err) {
+      console.error("Error fetching movies:", err);
     }
   };
 
-  const checkShows = async (moviesList) => {
-    let availability = {};
+  // ───── Fetch Shows + Seat Availability ─────
+  const fetchShows = async () => {
+
+    try {
+
+      const res = await getShows();
+      const allShows = res.data || res || [];
+
+      const showsWithSeats = await Promise.all(
+
+        allShows.map(async (show) => {
+
+          try {
+
+            const availRes = await checkSeatAvailability(show._id);
+            const bookedSeats = availRes.data.bookedSeats || [];
+
+            const totalSeats = show.screenId?.totalSeats || 0;
+            const availableSeats = totalSeats - bookedSeats.length;
+
+            return {
+              ...show,
+              totalSeats,
+              availableSeats
+            };
+
+          } catch {
+
+            return {
+              ...show,
+              totalSeats: show.screenId?.totalSeats || 0,
+              availableSeats: 0
+            };
 
     for (let movie of moviesList) {
       try {
@@ -41,73 +70,231 @@ function MovieList() {
         availability[movie._id] = false;
       }
     }
-
-    setShowAvailability(availability);
   };
 
-  const handleBookNow = (movieId) => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+  // ───── Get shows for movie ─────
+  const getMovieShows = (movieId) => {
 
-    navigate(`/booking?movieId=${movieId}`);
+    return shows.filter(
+      (show) =>
+        show.movieId?._id === movieId &&
+        show.status === "Active"
+    );
+
   };
 
-  if (loading) return <div className="container mt-5">Loading movies...</div>;
+  // ───── Open modal ─────
+  const openShows = (movie) => {
+
+    const movieShows = getMovieShows(movie._id);
+
+    setSelectedShows(movieShows);
+    setSelectedMovie(movie);
+
+  };
+
+  // ───── Close modal ─────
+  const closeModal = () => {
+
+    setSelectedMovie(null);
+    setSelectedShows([]);
+
+  };
 
   return (
+
     <div className="container mt-5">
-      <h2>Movies</h2>
 
-      {movies.length === 0 ? (
-        <p>No movies available.</p>
-      ) : (
-        <div className="row">
-          {movies.map((movie) => {
-            const hasShows = showAvailability[movie._id];
+      <h2 className="mb-4">Movies</h2>
 
-            return (
-              <div className="col-md-4 mb-4" key={movie._id}>
-                <div className="card p-3 shadow-sm">
-                  <h5>{movie.title}</h5>
-                  <p><strong>Language:</strong> {movie.language}</p>
-                  <p><strong>Genre:</strong> {movie.genre.join(', ')}</p>
-                  <p><strong>Rating:</strong> {movie.rating}</p>
+      <div className="row">
 
-                  <div className="d-flex justify-content-between mt-3">
-                    <Link
-                      to={`/movies/${movie._id}`}
-                      className="btn btn-outline-primary btn-sm"
-                    >
-                      View Details
-                    </Link>
+        {movies.map((movie) => {
 
-                    {!token ? (
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => navigate('/login')}
-                      >
-                        Login to Book
-                      </button>
-                    ) : (
-                      <button
-                        className="btn btn-success btn-sm"
-                        disabled={!hasShows}
-                        onClick={() => handleBookNow(movie._id)}
-                      >
-                        {hasShows ? 'Book Now' : 'No Shows Available'}
-                      </button>
-                    )}
-                  </div>
-                </div>
+          const movieShows = getMovieShows(movie._id);
+
+          return (
+
+            <div key={movie._id} className="col-md-4 mb-4">
+
+              <div className="card p-3 shadow-sm h-100">
+
+                <h5>{movie.title}</h5>
+
+                <p>
+                  <strong>Language:</strong> {movie.language}
+                </p>
+
+                <p>
+                  <strong>Rating:</strong> {movie.rating}
+                </p>
+
+                {/* View Details */}
+
+                <button
+                  className="btn btn-primary mb-2"
+                  onClick={() => navigate(`/movies/${movie._id}`)}
+                >
+                  View Details
+                </button>
+
+                {/* Shows Button */}
+
+                {movieShows.length > 0 ? (
+
+                  <button
+                    className="btn btn-success"
+                    onClick={() => openShows(movie)}
+                  >
+                    {movieShows.length} Shows Available
+                  </button>
+
+                ) : (
+
+                  <p className="text-danger fw-bold">
+                    No Shows Available
+                  </p>
+
+                )}
+
               </div>
-            );
-          })}
+
+            </div>
+
+          );
+
+        })}
+
+      </div>
+
+      {/* SHOW LIST MODAL */}
+
+      {selectedMovie && (
+
+        <div
+          className="modal d-block"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+        >
+
+          <div className="modal-dialog modal-lg">
+
+            <div className="modal-content">
+
+              <div className="modal-header">
+
+                <h5 className="modal-title">
+                  Shows for {selectedMovie.title}
+                </h5>
+
+                <button
+                  className="btn-close"
+                  onClick={closeModal}
+                ></button>
+
+              </div>
+
+              <div className="modal-body">
+
+                {selectedShows.length === 0 ? (
+
+                  <p className="text-danger">
+                    No shows available
+                  </p>
+
+                ) : (
+
+                  <table className="table table-bordered">
+
+                    <thead>
+
+                      <tr>
+                        <th>Theatre</th>
+                        <th>Location</th>
+                        <th>Screen</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Price</th>
+                        <th>Seats</th>
+                        <th>Action</th>
+                      </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                      {selectedShows.map((show) => (
+
+                        <tr key={show._id}>
+
+                          <td>
+                            {show.screenId?.theatreId?.name}
+                          </td>
+
+                          <td>
+                            {show.screenId?.theatreId?.city}
+                          </td>
+
+                          <td>
+                            {show.screenId?.screenName}
+                          </td>
+
+                          <td>
+                            {new Date(show.showDate)
+                              .toLocaleDateString("en-GB")}
+                          </td>
+
+                          <td>
+                            {show.showTime}
+                          </td>
+
+                          <td>
+                            ₹{show.ticketPrice}
+                          </td>
+
+                          <td>
+                            {show.availableSeats} / {show.totalSeats}
+                          </td>
+
+                          <td>
+
+                            <button
+                              className="btn btn-primary btn-sm"
+                              disabled={show.availableSeats === 0}
+                              onClick={() =>
+                                navigate(`/booking?showId=${show._id}`)
+                              }
+                            >
+                              {show.availableSeats === 0
+                                ? "Sold Out"
+                                : "Book"}
+                            </button>
+
+                          </td>
+
+                        </tr>
+
+                      ))}
+
+                    </tbody>
+
+                  </table>
+
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
+
       )}
+
     </div>
+
   );
+
 }
 
 export default MovieList;

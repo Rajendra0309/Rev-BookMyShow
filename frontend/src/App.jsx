@@ -73,6 +73,15 @@ function App() {
         {/* Booking History — uncomment import above when Samrudhi completes BookingHistory.jsx */}
         <Route path="/bookings" element={<Protected><BookingHistory /></Protected>} />
 
+        <Route
+          path="/booking/:showId"
+          element={
+            <Protected>
+              <SeatSelection />
+            </Protected>
+          }
+        />
+
         <Route path="/theatres" element={<Protected><TheatreList /></Protected>} />
 
         <Route path="/theatres/:id" element={<Protected><TheatreDetail /></Protected>} />

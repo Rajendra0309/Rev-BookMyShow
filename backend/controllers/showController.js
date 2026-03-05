@@ -2,24 +2,39 @@ const Show = require('../models/Show');
 const Movie = require('../models/Movie');
 const Screen = require('../models/Screen');
 
-// 🔹 Create Show
+
+// ================= CREATE SHOW =================
 exports.createShow = async (req, res) => {
     try {
+
         const { movieId, screenId, showDate, showTime, ticketPrice } = req.body;
 
-        // 1️⃣ Validate movie exists
+        // Validate movie
         const movie = await Movie.findById(movieId);
         if (!movie) {
             return res.status(404).json({ message: "Movie not found" });
         }
 
-        // 2️⃣ Validate screen exists
+        // Validate screen
         const screen = await Screen.findById(screenId);
         if (!screen) {
             return res.status(404).json({ message: "Screen not found" });
         }
 
-        // 3️⃣ Create show
+        // Prevent duplicate show
+        const existingShow = await Show.findOne({
+            screenId,
+            showDate,
+            showTime
+        });
+
+        if (existingShow) {
+            return res.status(400).json({
+                message: "A show already exists on this screen at the same time."
+            });
+        }
+
+        // Create show
         const newShow = new Show({
             movieId,
             screenId,
@@ -48,7 +63,13 @@ exports.getAllShows = async (req, res) => {
 
         const shows = await Show.find(filter)
             .populate('movieId')
-            .populate('screenId');
+            .populate({
+                path: 'screenId',
+                populate: {
+                    path: 'theatreId'
+                }
+            })
+            .sort({ showDate: 1, showTime: 1 });
 
         res.status(200).json(shows);
 
@@ -58,12 +79,18 @@ exports.getAllShows = async (req, res) => {
 };
 
 
-// 🔹 Get Single Show By ID
+// ================= GET SHOW BY ID =================
 exports.getShowById = async (req, res) => {
     try {
+
         const show = await Show.findById(req.params.id)
             .populate('movieId')
-            .populate('screenId');
+            .populate({
+                path: 'screenId',
+                populate: {
+                    path: 'theatreId'
+                }
+            });
 
         if (!show) {
             return res.status(404).json({ message: "Show not found" });
@@ -77,8 +104,10 @@ exports.getShowById = async (req, res) => {
 };
 
 
+// ================= CANCEL SHOW =================
 exports.cancelShow = async (req, res) => {
     try {
+
         const show = await Show.findById(req.params.id);
 
         if (!show) {
@@ -86,9 +115,57 @@ exports.cancelShow = async (req, res) => {
         }
 
         show.status = "Cancelled";
+
         await show.save();
 
-        res.status(200).json({ message: "Show cancelled successfully" });
+        res.status(200).json({
+            message: "Show cancelled successfully"
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+// ================= UPDATE SHOW =================
+exports.updateShow = async (req, res) => {
+    try {
+
+        const { screenId, showDate, showTime, ticketPrice } = req.body;
+
+        const show = await Show.findById(req.params.id);
+
+        if (!show) {
+            return res.status(404).json({ message: "Show not found" });
+        }
+
+        // Prevent duplicate show during update
+        const existingShow = await Show.findOne({
+            screenId,
+            showDate,
+            showTime,
+            _id: { $ne: req.params.id }
+        });
+
+        if (existingShow) {
+            return res.status(400).json({
+                message: "Another show already exists at this time."
+            });
+        }
+
+        // Update fields
+        if (screenId) show.screenId = screenId;
+        if (showDate) show.showDate = showDate;
+        if (showTime) show.showTime = showTime;
+        if (ticketPrice) show.ticketPrice = ticketPrice;
+
+        await show.save();
+
+        res.status(200).json({
+            message: "Show updated successfully",
+            show
+        });
 
     } catch (error) {
         res.status(500).json({ message: error.message });

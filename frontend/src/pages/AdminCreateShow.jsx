@@ -10,7 +10,7 @@ import {
   getShows,
   cancelShow,
   updateShow
-} from '../services/bookingService';
+} from '../services/showService';
 import {
   getAllTheatres,
   getScreensByTheatre
@@ -52,6 +52,9 @@ function AdminCreateShow() {
 
   const [shows, setShows] = useState([]);
   const [selectedMovieForShow, setSelectedMovieForShow] = useState(null);
+
+  const [movieSearchShowTab, setMovieSearchShowTab] = useState('');
+  const [showSearch, setShowSearch] = useState('');
 
   // Theatre → Screen cascade for show creation
   const [theatres, setTheatres] = useState([]);
@@ -118,14 +121,26 @@ function AdminCreateShow() {
     } catch { /* silent */ }
   };
 
+  // const fetchShows = async () => {
+  //   try {
+  //     const data = await getShows();
+  //     setShows(data.data || []);
+  //   } catch {
+  //     alert('Error fetching shows');
+  //   }
+  // };
   const fetchShows = async () => {
-    try {
-      const data = await getShows();
-      setShows(data.data || []);
-    } catch {
-      alert('Error fetching shows');
-    }
-  };
+  try {
+    const res = await getShows();
+
+    console.log("Shows API response:", res);
+
+    setShows(res || []);
+  } catch (err) {
+    console.error("Error fetching shows:", err);
+    alert("Error fetching shows");
+  }
+};
 
   /* ================= MOVIE FUNCTIONS (UNCHANGED) ================= */
 
@@ -206,12 +221,27 @@ function AdminCreateShow() {
     e.preventDefault();
 
     try {
-      await createShow({
+
+      const payload = {
         movieId: selectedMovieForShow._id,
         ...showForm
-      });
+      };
 
-      alert('Show created successfully');
+      if (editingShowId) {
+
+        // UPDATE SHOW
+        await updateShow(editingShowId, payload);
+        alert("Show updated successfully");
+
+      } else {
+
+        // CREATE SHOW
+        await createShow(payload);
+        alert("Show created successfully");
+
+      }
+
+      setEditingShowId(null);
 
       setShowForm({
         screenId: '',
@@ -224,36 +254,39 @@ function AdminCreateShow() {
       fetchShows();
 
     } catch (err) {
-      alert(err.response?.data?.message || 'Error creating show');
+      alert(err.response?.data?.message || 'Error saving show');
     }
   };
-
   const handleCancelShow = async (id) => {
     if (!window.confirm('Cancel this show?')) return;
     await cancelShow(id);
     fetchShows();
   };
 
-  const openEditModal = (show) => {
-    setEditingShow(show);
-    setEditForm({
-      showDate: show.showDate ? new Date(show.showDate).toISOString().split('T')[0] : '',
-      showTime: show.showTime || '',
-      ticketPrice: show.ticketPrice || ''
-    });
-  };
+  const handleEditShow = async (show) => {
 
-  const closeEditModal = () => setEditingShow(null);
+    const theatreId = show.screenId?.theatreId?._id || show.screenId?.theatreId;
 
-  const handleUpdateShow = async (e) => {
-    e.preventDefault();
+    setEditingShowId(show._id);   // ⭐ important
+
+    setSelectedMovieForShow(show.movieId);
+    setSelectedTheatreId(theatreId);
+
     try {
-      await updateShow(editingShow._id, editForm);
-      alert('Show updated successfully');
-      closeEditModal();
-      fetchShows();
+      const res = await getScreensByTheatre(theatreId);
+      const screens = res.data.data || res.data || [];
+
+      setScreenOptions(screens);
+
+      setShowForm({
+        screenId: show.screenId?._id || "",
+        showDate: show.showDate?.split("T")[0],
+        showTime: show.showTime,
+        ticketPrice: show.ticketPrice
+      });
+
     } catch (err) {
-      alert(err.response?.data?.message || 'Error updating show');
+      console.error("Error loading screens:", err);
     }
   };
 
@@ -269,19 +302,71 @@ function AdminCreateShow() {
   }
   // =================== show model popup=======================
 
+  // const openShowModal = (movie) => {
+  //   setSelectedMovieForShow(movie);
+  //   setSelectedTheatreId('');
+  //   setScreenOptions([]);
+  // };
+
   const openShowModal = (movie) => {
+    setEditingShowId(null); // ⭐ reset edit mode
+
     setSelectedMovieForShow(movie);
     setSelectedTheatreId('');
     setScreenOptions([]);
+
+    setShowForm({
+      screenId: '',
+      showDate: '',
+      showTime: '',
+      ticketPrice: ''
+    });
   };
 
+
+  // const closeShowModal = () => {
+  //   setSelectedMovieForShow(null);
+  //   setSelectedTheatreId('');
+  //   setScreenOptions([]);
+  //   setShowForm({ screenId: '', showDate: '', showTime: '', ticketPrice: '' });
+  // };
+
   const closeShowModal = () => {
+    setEditingShowId(null);
+
     setSelectedMovieForShow(null);
     setSelectedTheatreId('');
     setScreenOptions([]);
-    setShowForm({ screenId: '', showDate: '', showTime: '', ticketPrice: '' });
+
+    setShowForm({
+      screenId: '',
+      showDate: '',
+      showTime: '',
+      ticketPrice: ''
+    });
   };
 
+  const filteredMoviesForShow = movies.filter(movie =>
+    movie.title.toLowerCase().includes(movieSearchShowTab.toLowerCase())
+  );
+
+  const filteredShows = shows.filter(show => {
+    const searchValue = showSearch.toLowerCase();
+
+    const movieTitle = show.movieId?.title?.toLowerCase() || "";
+    const theatreName = show.screenId?.theatreId?.name?.toLowerCase() || "";
+    const screenName = show.screenId?.screenName?.toLowerCase() || "";
+    const showDate = new Date(show.showDate).toLocaleDateString('en-GB').toLowerCase();
+    const showTime = show.showTime?.toLowerCase() || "";
+
+    return (
+      movieTitle.includes(searchValue) ||
+      theatreName.includes(searchValue) ||
+      screenName.includes(searchValue) ||
+      showDate.includes(searchValue) ||
+      showTime.includes(searchValue)
+    );
+  });
 
   return (
     <div className="container mt-5">
@@ -458,7 +543,16 @@ function AdminCreateShow() {
 
           {/* LEFT COLUMN – MOVIES */}
           <div className="col-md-6">
+            
             <h4>Movies</h4>
+
+            <input
+              type="text"
+              placeholder="Search movie..."
+              className="form-control mb-2"
+              value={movieSearchShowTab}
+              onChange={(e) => setMovieSearchShowTab(e.target.value)}
+            />
             <table className="table table-bordered">
               <thead>
                 <tr>
@@ -467,10 +561,16 @@ function AdminCreateShow() {
                 </tr>
               </thead>
               <tbody>
-                {movies.map(movie => (
+                {filteredMoviesForShow.map(movie => (
                   <tr key={movie._id}>
                     <td>{movie.title}</td>
                     <td>
+                      {/* <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => openShowModal(movie)}
+                      >
+                        Create Show
+                      </button> */}
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={() => openShowModal(movie)}
@@ -487,32 +587,42 @@ function AdminCreateShow() {
           {/* RIGHT COLUMN – SHOW LIST */}
           <div className="col-md-6">
             <h4>All Shows</h4>
+            <input
+              type="text"
+              placeholder="Search by movie, theatre, screen, date or time..."
+              className="form-control mb-2"
+              value={showSearch}
+              onChange={(e) => setShowSearch(e.target.value)}
+            />
             <table className="table table-bordered">
               <thead>
                 <tr>
                   <th>Movie</th>
-                  <th>Date</th>
+                  <th>Theatre</th>
+                  <th>Screen</th>
+                  <th>Date (dd/mm/yyyy)</th>
                   <th>Time</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {shows.map(show => (
+                {filteredShows.map(show => (
                   <tr key={show._id}>
                     <td>{show.movieId?.title}</td>
-                    <td>{new Date(show.showDate).toLocaleDateString()}</td>
+                    <td>{show.screenId?.theatreId?.name}</td>
+                    <td>{show.screenId?.screenName}</td>
+                    <td>{new Date(show.showDate).toLocaleDateString('en-GB')}</td>
                     <td>{show.showTime}</td>
                     <td>{show.status}</td>
                     <td>
-                      {show.status === 'Active' && (
                         <button
                           className="btn btn-warning btn-sm me-2"
-                          onClick={() => openEditModal(show)}
+                          onClick={() => handleEditShow(show)}
                         >
                           Edit
                         </button>
-                      )}
+
                       {show.status === 'Active' && (
                         <button
                           className="btn btn-danger btn-sm"
@@ -541,8 +651,11 @@ function AdminCreateShow() {
             <div className="modal-content">
 
               <div className="modal-header">
-                <h5 className="modal-title">
+                {/* <h5 className="modal-title">
                   Create Show for: {selectedMovieForShow.title}
+                </h5> */}
+                <h5 className="modal-title">
+                  {editingShowId ? "Edit Show" : "Create Show"} for: {selectedMovieForShow.title}
                 </h5>
                 <button
                   className="btn-close"
@@ -611,8 +724,11 @@ function AdminCreateShow() {
                     required
                   />
 
-                  <button className="btn btn-success w-100">
+                  {/* <button className="btn btn-success w-100">
                     Create Show
+                  </button> */}
+                  <button className="btn btn-success w-100">
+                    {editingShowId ? "Update Show" : "Create Show"}
                   </button>
 
                 </form>
