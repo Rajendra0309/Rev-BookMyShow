@@ -14,8 +14,7 @@ export default function Register() {
         e.preventDefault();
         try {
             const { data } = await register(form);
-            saveToken(data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            saveToken(data.token, data.user);
             navigate('/movies');
         } catch (err) {
             setError(err.response?.data?.msg || 'Registration failed');

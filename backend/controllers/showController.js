@@ -41,10 +41,12 @@ exports.createShow = async (req, res) => {
 };
 
 
-// 🔹 Get All Shows
 exports.getAllShows = async (req, res) => {
     try {
-        const shows = await Show.find()
+        const { movieId } = req.query;
+        const filter = movieId ? { movieId } : {};
+
+        const shows = await Show.find(filter)
             .populate('movieId')
             .populate('screenId');
 
@@ -75,7 +77,6 @@ exports.getShowById = async (req, res) => {
 };
 
 
-// 🔹 Cancel Show
 exports.cancelShow = async (req, res) => {
     try {
         const show = await Show.findById(req.params.id);
@@ -88,6 +89,32 @@ exports.cancelShow = async (req, res) => {
         await show.save();
 
         res.status(200).json({ message: "Show cancelled successfully" });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.updateShow = async (req, res) => {
+    try {
+        const show = await Show.findById(req.params.id);
+
+        if (!show) {
+            return res.status(404).json({ message: "Show not found" });
+        }
+
+        if (show.status === 'Cancelled') {
+            return res.status(400).json({ message: "Cannot edit a cancelled show" });
+        }
+
+        const { showDate, showTime, ticketPrice } = req.body;
+        if (showDate) show.showDate = showDate;
+        if (showTime) show.showTime = showTime;
+        if (ticketPrice) show.ticketPrice = ticketPrice;
+
+        await show.save();
+
+        res.status(200).json({ message: "Show updated successfully", show });
 
     } catch (error) {
         res.status(500).json({ message: error.message });

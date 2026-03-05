@@ -8,7 +8,8 @@ import {
 import {
   createShow,
   getShows,
-  cancelShow
+  cancelShow,
+  updateShow
 } from '../services/bookingService';
 import {
   getAllTheatres,
@@ -63,6 +64,9 @@ function AdminCreateShow() {
     showTime: '',
     ticketPrice: ''
   });
+
+  const [editingShow, setEditingShow] = useState(null);
+  const [editForm, setEditForm] = useState({ showDate: '', showTime: '', ticketPrice: '' });
 
   const token = getToken();
   const user = JSON.parse(localStorage.getItem('user'));
@@ -228,6 +232,29 @@ function AdminCreateShow() {
     if (!window.confirm('Cancel this show?')) return;
     await cancelShow(id);
     fetchShows();
+  };
+
+  const openEditModal = (show) => {
+    setEditingShow(show);
+    setEditForm({
+      showDate: show.showDate ? new Date(show.showDate).toISOString().split('T')[0] : '',
+      showTime: show.showTime || '',
+      ticketPrice: show.ticketPrice || ''
+    });
+  };
+
+  const closeEditModal = () => setEditingShow(null);
+
+  const handleUpdateShow = async (e) => {
+    e.preventDefault();
+    try {
+      await updateShow(editingShow._id, editForm);
+      alert('Show updated successfully');
+      closeEditModal();
+      fetchShows();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error updating show');
+    }
   };
 
   /* ================= AUTH CHECK ================= */
@@ -478,10 +505,14 @@ function AdminCreateShow() {
                     <td>{show.showTime}</td>
                     <td>{show.status}</td>
                     <td>
-                      <button className="btn btn-warning btn-sm me-2">
-                        Edit
-                      </button>
-
+                      {show.status === 'Active' && (
+                        <button
+                          className="btn btn-warning btn-sm me-2"
+                          onClick={() => openEditModal(show)}
+                        >
+                          Edit
+                        </button>
+                      )}
                       {show.status === 'Active' && (
                         <button
                           className="btn btn-danger btn-sm"
@@ -587,6 +618,48 @@ function AdminCreateShow() {
                 </form>
               </div>
 
+            </div>
+          </div>
+        </div>
+      )}
+      {editingShow && (
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.6)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit Show: {editingShow.movieId?.title}</h5>
+                <button className="btn-close" onClick={closeEditModal}></button>
+              </div>
+              <div className="modal-body">
+                <form onSubmit={handleUpdateShow}>
+                  <label className="form-label small text-muted">Show Date</label>
+                  <input
+                    type="date"
+                    className="form-control mb-2"
+                    value={editForm.showDate}
+                    onChange={(e) => setEditForm({ ...editForm, showDate: e.target.value })}
+                    required
+                  />
+                  <label className="form-label small text-muted">Show Time</label>
+                  <input
+                    type="time"
+                    className="form-control mb-2"
+                    value={editForm.showTime}
+                    onChange={(e) => setEditForm({ ...editForm, showTime: e.target.value })}
+                    required
+                  />
+                  <label className="form-label small text-muted">Ticket Price</label>
+                  <input
+                    type="number"
+                    className="form-control mb-3"
+                    placeholder="Ticket Price"
+                    value={editForm.ticketPrice}
+                    onChange={(e) => setEditForm({ ...editForm, ticketPrice: e.target.value })}
+                    required
+                  />
+                  <button className="btn btn-success w-100">Update Show</button>
+                </form>
+              </div>
             </div>
           </div>
         </div>

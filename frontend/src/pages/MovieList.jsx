@@ -36,7 +36,7 @@ function MovieList() {
     for (let movie of moviesList) {
       try {
         const shows = await getShowsByMovie(movie._id);
-        availability[movie._id] = shows.data?.length > 0;
+        availability[movie._id] = shows?.filter(s => s.status === 'Active').length > 0;
       } catch {
         availability[movie._id] = false;
       }
