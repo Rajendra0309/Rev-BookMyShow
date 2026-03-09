@@ -17,12 +17,12 @@ const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
 
 // Placeholder: replace with real component when teammate completes it
-const ComingSoon = ({ name }) => (
-  <div className="container mt-5 text-center">
-    <h4>{name} — Coming Soon</h4>
-    <p className="text-muted">This module is under development.</p>
-  </div>
-);
+// const ComingSoon = ({ name }) => (
+//   <div className="container mt-5 text-center">
+//     <h4>{name} — Coming Soon</h4>
+//     <p className="text-muted">This module is under development.</p>
+//   </div>
+// );
 
 function App() {
   return (
