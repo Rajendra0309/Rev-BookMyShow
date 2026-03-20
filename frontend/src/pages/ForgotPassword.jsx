@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getToken } from '../services/authService';
 
 const API = `${import.meta.env.VITE_API_URL}/auth`;
 
 export default function ForgotPassword() {
-    const [step, setStep] = useState(1); // step 1: enter email, step 2: answer Q + new password
+    const navigate = useNavigate();
+    const [step, setStep] = useState(1);
     const [email, setEmail] = useState('');
     const [question, setQuestion] = useState('');
     const [answer, setAnswer] = useState('');
@@ -13,7 +15,12 @@ export default function ForgotPassword() {
     const [msg, setMsg] = useState('');
     const [error, setError] = useState('');
 
-    // Step 1 — fetch security question by email
+    useEffect(() => {
+        if (getToken()) {
+            navigate('/movies');
+        }
+    }, [navigate]);
+
     const handleFetchQuestion = async (e) => {
         e.preventDefault();
         setError('');
@@ -26,7 +33,6 @@ export default function ForgotPassword() {
         }
     };
 
-    // Step 2 — reset password using answer
     const handleReset = async (e) => {
         e.preventDefault();
         setError('');
@@ -40,9 +46,9 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className='d-flex justify-content-center align-items-center vh-100 bg-light'>
-            <div className='card p-4 shadow' style={{ width: '400px' }}>
-                <h4 className='mb-3 text-center'>Forgot Password</h4>
+        <div className='auth-shell'>
+            <div className='card auth-card'>
+                <h4 className='auth-title'>Forgot Password</h4>
 
                 {/* Step 1 — Enter Email */}
                 {step === 1 && (
@@ -78,7 +84,7 @@ export default function ForgotPassword() {
                 )}
 
                 {step !== 3 && (
-                    <p className='text-center mt-3 mb-0'>
+                    <p className='text-center mt-3 mb-0 text-muted'>
                         <Link to='/login'>Back to Login</Link>
                     </p>
                 )}

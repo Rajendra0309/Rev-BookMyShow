@@ -47,8 +47,8 @@ export default function BookingHistory() {
         }) : '—';
 
     return (
-        <div className="container mt-5">
-            <h2 className="mb-4">🎟️ My Bookings</h2>
+        <div className="container mt-4">
+            <h2 className="page-title">My Bookings</h2>
 
             {error && <div className="alert alert-danger">{error}</div>}
 

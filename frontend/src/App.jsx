@@ -12,82 +12,70 @@ import AdminCreateShow from './pages/AdminCreateShow';
 import TheatreList from './pages/TheatreList';
 import TheatreDetail from './pages/TheatreDetail';
 import BookingHistory from './pages/BookingHistory';
+import BookingAssistant from './components/BookingAssistant';
 
 const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
-
-// Placeholder: replace with real component when teammate completes it
-// const ComingSoon = ({ name }) => (
-//   <div className="container mt-5 text-center">
-//     <h4>{name} — Coming Soon</h4>
-//     <p className="text-muted">This module is under development.</p>
-//   </div>
-// );
 
 function App() {
   return (
     <BrowserRouter>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+      <div className="app-shell">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Movie Placeholder */}
-        {/* <Route path="/movies" element={<Protected><ComingSoon name="Movie Module" /></Protected>} /> */}
-        {/* Movie Module */}
-        <Route
-          path="/movies"
-          element={
-            <Protected>
-              <MovieList />
-            </Protected>
-          }
-        />
+          <Route
+            path="/movies"
+            element={
+              <Protected>
+                <MovieList />
+              </Protected>
+            }
+          />
 
-        <Route
-          path="/movies/:id"
-          element={
-            <Protected>
-              <MovieDetails />
-            </Protected>
-          }
-        />
+          <Route
+            path="/movies/:id"
+            element={
+              <Protected>
+                <MovieDetails />
+              </Protected>
+            }
+          />
 
-        <Route
-          path="/admin/show/create"
-          element={
-            <Protected>
-              <AdminCreateShow />
-            </Protected>
-          }
-        />
+          <Route
+            path="/admin/show/create"
+            element={
+              <Protected>
+                <AdminCreateShow />
+              </Protected>
+            }
+          />
 
-        {/* ✅ Your Seat Selection Route */}
-        <Route path="/booking" element={<Protected><SeatSelection /></Protected>} />
+          <Route path="/booking" element={<Protected><SeatSelection /></Protected>} />
+          <Route path="/reports" element={<Protected><Reports /></Protected>} />
+          <Route path="/bookings" element={<Protected><BookingHistory /></Protected>} />
 
-        {/* Reports Module */}
-        <Route path="/reports" element={<Protected><Reports /></Protected>} />
+          <Route
+            path="/booking/:showId"
+            element={
+              <Protected>
+                <SeatSelection />
+              </Protected>
+            }
+          />
 
-        {/* Booking History — uncomment import above when Samrudhi completes BookingHistory.jsx */}
-        <Route path="/bookings" element={<Protected><BookingHistory /></Protected>} />
+          <Route path="/theatres" element={<Protected><TheatreList /></Protected>} />
 
-        <Route
-          path="/booking/:showId"
-          element={
-            <Protected>
-              <SeatSelection />
-            </Protected>
-          }
-        />
+          <Route path="/theatres/:id" element={<Protected><TheatreDetail /></Protected>} />
 
-        <Route path="/theatres" element={<Protected><TheatreList /></Protected>} />
-
-        <Route path="/theatres/:id" element={<Protected><TheatreDetail /></Protected>} />
-
-        <Route path="*" element={<Navigate to="/movies" />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/movies" />} />
+        </Routes>
+      </div>
+      <BookingAssistant />
     </BrowserRouter>
   );
 }

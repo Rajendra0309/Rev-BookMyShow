@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, saveToken } from '../services/authService';
+import { login, saveToken, getToken } from '../services/authService';
 
 export default function Login() {
     const navigate = useNavigate();
     const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (getToken()) {
+            navigate('/movies');
+        }
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,18 +25,18 @@ export default function Login() {
     };
 
     return (
-        <div className='d-flex justify-content-center align-items-center vh-100 bg-light'>
-            <div className='card p-4 shadow' style={{ width: '380px' }}>
-                <h4 className='mb-3 text-center'>RevBookMyShow Login</h4>
+        <div className='auth-shell'>
+            <div className='card auth-card'>
+                <h4 className='auth-title'>Welcome Back</h4>
                 {error && <div className='alert alert-danger py-2'>{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <input className="form-control mb-2" placeholder='Email' type="email"
                         value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
                     <input className='form-control mb-2' placeholder='Password' type='password'
                         value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
-                    <button className='btn btn-danger w-100' type='submit'>Login</button>
+                    <button className='btn btn-danger w-100 mt-1' type='submit'>Login</button>
                 </form>
-                <p className='text-center mt-3 mb-0'>
+                <p className='text-center mt-3 mb-0 text-muted'>
                     New user? <Link to="/register">Register here</Link>
                     {' | '}<Link to="/forgot-password">Forgot Password?</Link>
                 </p>

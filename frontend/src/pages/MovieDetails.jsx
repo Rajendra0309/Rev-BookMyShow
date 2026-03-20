@@ -132,32 +132,47 @@ function MovieDetails() {
 
   return (
 
-    <div className="container mt-5">
+    <div className="container mt-4">
 
       {/* Movie Info */}
 
-      <h2>{movie.title}</h2>
+      <h2 className="page-title mb-2">{movie.title}</h2>
 
-      <p>
-        <strong>Language:</strong> {movie.language}
-      </p>
+      <div className="row g-4 align-items-start">
+        <div className="col-md-4">
+          {movie.imageUrl ? (
+            <img
+              src={movie.imageUrl}
+              alt={movie.title}
+              style={{ width: '100%', borderRadius: 14, objectFit: 'cover', maxHeight: 430 }}
+            />
+          ) : (
+            <div className="card p-4 text-center text-muted">No poster added</div>
+          )}
+        </div>
+        <div className="col-md-8">
+          <p>
+            <strong>Language:</strong> {movie.language}
+          </p>
 
-      <p>
-        <strong>Genre:</strong> {movie.genre?.join(", ")}
-      </p>
+          <p>
+            <strong>Genre:</strong> {movie.genre?.join(", ")}
+          </p>
 
-      <p>
-        <strong>Duration:</strong> {movie.duration} minutes
-      </p>
+          <p>
+            <strong>Duration:</strong> {movie.duration} minutes
+          </p>
 
-      <p>
-        <strong>Rating:</strong> {movie.rating}
-      </p>
+          <p>
+            <strong>Rating:</strong> {movie.rating}
+          </p>
 
-      <hr />
+          <hr />
 
-      <h5>Description</h5>
-      <p>{movie.description}</p>
+          <h5>Description</h5>
+          <p>{movie.description}</p>
+        </div>
+      </div>
 
       <hr />
 

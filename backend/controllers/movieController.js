@@ -5,7 +5,7 @@ const Movie = require('../models/Movie');
    ====================================================== */
 exports.createMovie = async (req, res) => {
     try {
-        const { title, genre, language, duration, rating, description } = req.body;
+        const { title, genre, language, duration, rating, description, imageUrl } = req.body;
 
         const movie = await Movie.create({
             title,
@@ -13,7 +13,8 @@ exports.createMovie = async (req, res) => {
             language,
             duration,
             rating,
-            description
+            description,
+            imageUrl
         });
 
         res.status(201).json({

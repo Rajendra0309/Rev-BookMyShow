@@ -114,9 +114,9 @@ function MovieList() {
 
   return (
 
-    <div className="container mt-5">
+    <div className="container mt-4">
 
-      <h2 className="mb-4">Movies</h2>
+      <h2 className="page-title">Now Showing</h2>
 
       <div className="row">
 
@@ -129,6 +129,15 @@ function MovieList() {
             <div key={movie._id} className="col-md-4 mb-4">
 
               <div className="card p-3 shadow-sm h-100">
+
+                {movie.imageUrl && (
+                  <img
+                    src={movie.imageUrl}
+                    alt={movie.title}
+                    className="mb-3"
+                    style={{ width: '100%', height: 300, objectFit: 'cover', borderRadius: 12 }}
+                  />
+                )}
 
                 <h5>{movie.title}</h5>
 
@@ -184,7 +193,7 @@ function MovieList() {
 
         <div
           className="modal d-block"
-          style={{ background: "rgba(0,0,0,0.6)" }}
+          style={{ background: "rgba(9, 13, 28, 0.58)", backdropFilter: "blur(3px)" }}
         >
 
           <div className="modal-dialog modal-lg">

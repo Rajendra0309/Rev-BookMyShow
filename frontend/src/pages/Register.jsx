@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register, saveToken } from '../services/authService';
+import { register, saveToken, getToken } from '../services/authService';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -9,6 +9,12 @@ export default function Register() {
         securityQuestion: '', securityAnswer: ''
     });
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (getToken()) {
+            navigate('/movies');
+        }
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,9 +28,9 @@ export default function Register() {
     };
 
     return (
-        <div className='d-flex justify-content-center align-items-center min-vh-100 bg-light py-4'>
-            <div className='card p-4 shadow' style={{ width: '400px' }}>
-                <h4 className='mb-3 text-center'>Register</h4>
+        <div className='auth-shell py-4'>
+            <div className='card auth-card'>
+                <h4 className='auth-title'>Create Account</h4>
                 {error && <div className='alert alert-danger py-2'>{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <input className='form-control mb-2' placeholder="Full Name"
@@ -40,7 +46,7 @@ export default function Register() {
                     </select>
 
                     <hr className='my-2' />
-                    <small className='text-muted'>Security Question (for password recovery)</small>
+                    <small className='text-muted'>Security Question for password recovery</small>
                     <input className='form-control mb-2 mt-1' placeholder="e.g. What is your pet's name?"
                         value={form.securityQuestion} onChange={e => setForm({ ...form, securityQuestion: e.target.value })} />
                     <input className='form-control mb-3' placeholder="Your answer"
@@ -48,7 +54,7 @@ export default function Register() {
 
                     <button className='btn btn-danger w-100' type='submit'>Register</button>
                 </form>
-                <p className='text-center mt-3 mb-0'>
+                <p className='text-center mt-3 mb-0 text-muted'>
                     Already have an account? <Link to="/login">Login</Link>
                 </p>
             </div>

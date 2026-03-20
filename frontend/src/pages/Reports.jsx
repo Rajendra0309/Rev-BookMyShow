@@ -188,17 +188,17 @@ export default function Reports() {
 
     /* -- Tab list -- */
     const tabs = [
-        { key: 'notifications', label: '🔔 Notifications', forAll: true },
-        { key: 'revenue', label: '💰 Revenue', forAll: false },
-        { key: 'occupancy', label: '🏟️ Occupancy', forAll: false },
-        { key: 'bookings', label: '📋 Bookings', forAll: false }
+        { key: 'notifications', label: 'Notifications', forAll: true },
+        { key: 'revenue', label: 'Revenue', forAll: false },
+        { key: 'occupancy', label: 'Occupancy', forAll: false },
+        { key: 'bookings', label: 'Bookings', forAll: false }
     ].filter(t => t.forAll || isAdmin);
 
     return (
         <div style={styles.page}>
             {/* Page Header */}
             <div style={styles.pageHeader}>
-                <h1 style={styles.pageTitle}>{isAdmin ? '📊 Reports & Notifications' : '🔔 Notifications'}</h1>
+                <h1 style={styles.pageTitle}>{isAdmin ? 'Reports & Notifications' : 'Notifications'}</h1>
                 <p style={styles.pageSubtitle}>
                     {isAdmin ? 'Admin Dashboard — Revenue, Occupancy & Booking Analytics' : 'Your Notification Centre'}
                 </p>
@@ -226,7 +226,7 @@ export default function Reports() {
             {/* ─── NOTIFICATIONS TAB ───────────────────────────── */}
             {activeTab === 'notifications' && (
                 <div style={styles.section}>
-                    <SectionHeader title="My Notifications" icon="🔔" />
+                    <SectionHeader title="My Notifications"/>
                     {notifsLoading ? (
                         <p style={styles.loadingText}>Loading…</p>
                     ) : notifications.length === 0 ? (
@@ -246,7 +246,7 @@ export default function Reports() {
             {/* ─── REVENUE REPORT TAB ──────────────────────────── */}
             {activeTab === 'revenue' && isAdmin && (
                 <div style={styles.section}>
-                    <SectionHeader title="Revenue Report" icon="💰" />
+                    <SectionHeader title="Revenue Report"/>
 
                     {/* Filters */}
                     <div style={styles.filterRow}>
@@ -342,7 +342,7 @@ export default function Reports() {
             {/* ─── OCCUPANCY REPORT TAB ────────────────────────── */}
             {activeTab === 'occupancy' && isAdmin && (
                 <div style={styles.section}>
-                    <SectionHeader title="Theatre Occupancy Report" icon="🏟️" />
+                    <SectionHeader title="Theatre Occupancy Report" />
                     <div style={styles.filterRow}>
                         <button style={{ ...styles.btn, ...styles.btnPrimary }} onClick={loadOccupancy}>
                             🔄 Refresh
@@ -408,7 +408,7 @@ export default function Reports() {
             {/* ─── BOOKING & CANCELLATION REPORT TAB ───────────── */}
             {activeTab === 'bookings' && isAdmin && (
                 <div style={styles.section}>
-                    <SectionHeader title="Booking &amp; Cancellation Report" icon="📋" />
+                    <SectionHeader title="Booking &amp; Cancellation Report"/>
 
                     {/* Filters */}
                     <div style={styles.filterRow}>
@@ -499,24 +499,26 @@ const styles = {
         maxWidth: '1200px',
         margin: '0 auto',
         padding: '2rem 1.5rem',
-        fontFamily: "'Segoe UI', sans-serif",
-        color: '#1e293b'
+        fontFamily: "'Sora', 'Segoe UI', sans-serif",
+        color: '#12151f'
     },
     pageHeader: {
         marginBottom: '1.5rem',
         paddingBottom: '1rem',
-        borderBottom: '2px solid #e2e8f0'
+        borderBottom: '3px solid #cf1d46'
     },
     pageTitle: {
-        fontSize: '1.8rem',
+        fontSize: '1.95rem',
         fontWeight: 700,
         margin: 0,
-        color: '#0f172a'
+        color: '#12151f',
+        letterSpacing: '-0.01em'
     },
     pageSubtitle: {
-        margin: '0.3rem 0 0',
-        color: '#64748b',
-        fontSize: '0.95rem'
+        margin: '0.5rem 0 0',
+        color: '#55607a',
+        fontSize: '0.95rem',
+        fontWeight: 500
     },
     errorBanner: {
         background: '#fef2f2',
@@ -554,15 +556,16 @@ const styles = {
         transition: 'all 0.2s'
     },
     tabActive: {
-        background: '#1d4ed8',
+        background: '#cf1d46',
         color: '#fff',
-        borderColor: '#1d4ed8'
+        borderColor: '#cf1d46'
     },
     section: {
         background: '#fff',
         borderRadius: '12px',
         padding: '1.5rem',
-        boxShadow: '0 1px 6px rgba(0,0,0,0.07)'
+        boxShadow: '0 1px 6px rgba(0,0,0,0.07)',
+        borderLeft: '4px solid #cf1d46'
     },
     sectionHeader: {
         display: 'flex',
@@ -599,7 +602,7 @@ const styles = {
         fontSize: '0.85rem',
         transition: 'opacity 0.2s'
     },
-    btnPrimary: { background: '#1d4ed8', color: '#fff' },
+    btnPrimary: { background: '#cf1d46', color: '#fff' },
     btnDanger: { background: '#ef4444', color: '#fff' },
     statsRow: {
         display: 'flex',
@@ -620,7 +623,7 @@ const styles = {
     tableHeading: { fontSize: '1rem', fontWeight: 700, color: '#374151', marginBottom: '0.6rem' },
     tableWrapper: { overflowX: 'auto' },
     table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' },
-    thead: { background: '#1d4ed8', color: '#fff' },
+    thead: { background: '#cf1d46', color: '#fff' },
     th: { padding: '0.65rem 0.9rem', textAlign: 'left', whiteSpace: 'nowrap' },
     td: { padding: '0.6rem 0.9rem', borderBottom: '1px solid #f1f5f9' },
     trEven: { background: '#fff' },

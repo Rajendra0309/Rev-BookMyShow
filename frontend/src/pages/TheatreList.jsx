@@ -52,9 +52,9 @@ export default function TheatreList() {
     };
 
     return (
-        <div className="container mt-5">
+        <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2>🏟️ Theatres</h2>
+            <h2 className="page-title mb-0">Theatres</h2>
                 {isAdmin && (
                     <button className="btn btn-danger" onClick={() => setShowForm(!showForm)}>
                         {showForm ? 'Cancel' : '+ Add Theatre'}
@@ -100,6 +100,13 @@ export default function TheatreList() {
                     {theatres.map((theatre) => (
                         <div className="col-md-4 mb-4" key={theatre._id}>
                             <div className="card h-100 shadow-sm">
+                                {theatre.imageUrl && (
+                                    <img
+                                        src={theatre.imageUrl}
+                                        alt={theatre.name}
+                                        style={{ width: '100%', height: 180, objectFit: 'cover', borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
+                                    />
+                                )}
                                 <div className="card-body">
                                     <h5 className="card-title">{theatre.name}</h5>
                                     <p className="card-text text-muted mb-1">📍 {theatre.city}</p>

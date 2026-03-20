@@ -36,12 +36,12 @@ exports.getTheatreById = async (req, res) => {
 // POST /api/theatres  (Admin only)
 exports.createTheatre = async (req, res) => {
     try {
-        const { name, location, city } = req.body;
+        const { name, location, city, imageUrl } = req.body;
         if (!name) {
             return res.status(400).json({ success: false, message: 'Theatre name is required' });
         }
 
-        const theatre = await Theatre.create({ name, location, city });
+        const theatre = await Theatre.create({ name, location, city, imageUrl });
         res.status(201).json({ success: true, message: 'Theatre created successfully', data: theatre });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -56,10 +56,11 @@ exports.updateTheatre = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Theatre not found' });
         }
 
-        const { name, location, city } = req.body;
-        if (name)     theatre.name     = name;
-        if (location) theatre.location = location;
-        if (city)     theatre.city     = city;
+        const { name, location, city, imageUrl } = req.body;
+        if (name !== undefined) theatre.name = name;
+        if (location !== undefined) theatre.location = location;
+        if (city !== undefined) theatre.city = city;
+        if (imageUrl !== undefined) theatre.imageUrl = imageUrl;
 
         await theatre.save();
         res.status(200).json({ success: true, message: 'Theatre updated successfully', data: theatre });

@@ -39,6 +39,11 @@ const MovieSchema = new mongoose.Schema({
     description: { 
         type: String 
     },
+    imageUrl: {
+        type: String,
+        trim: true,
+        default: 'https://lh3.googleusercontent.com/gg-dl/AOI_d__vY7RVsuzbE9lU-32eEXMNR_gJ6pqLM-RDYxwG2wVxntl61RjxGPM6BYGM8AdSEutjsWgBlvQsIhdZ3kptBgRB1Jzw7uOHLcCjsurj1G8UdLHSSifnNNSaS2JVtWACNLgGTdZMMqN5QdJlrqXca-kSwsra9Xeag4ygXld1vMv88Yz45A=s1600-rj'
+    },
     status: {
         type: String,
         enum: ['Active', 'Inactive'],

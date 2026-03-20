@@ -48,7 +48,8 @@ function AdminCreateShow() {
     language: '',
     duration: '',
     rating: '',
-    description: ''
+    description: '',
+    imageUrl: ''
   });
 
   const [pagination, setPagination] = useState({
@@ -93,7 +94,7 @@ function AdminCreateShow() {
 
   const [showTheatreForm, setShowTheatreForm] = useState(false);
   const [editingTheatreId, setEditingTheatreId] = useState(null);
-  const [theatreForm, setTheatreForm] = useState({ name: '', city: '', location: '' });
+  const [theatreForm, setTheatreForm] = useState({ name: '', city: '', location: '', imageUrl: '' });
 
   const [showScreenForm, setShowScreenForm] = useState(false);
   const [screenForm, setScreenForm] = useState({ screenName: '', totalSeats: '' });
@@ -188,7 +189,8 @@ function AdminCreateShow() {
       language: '',
       duration: '',
       rating: '',
-      description: ''
+      description: '',
+      imageUrl: ''
     });
     setEditingId(null);
   };
@@ -224,7 +226,8 @@ function AdminCreateShow() {
       language: movie.language,
       duration: movie.duration,
       rating: movie.rating,
-      description: movie.description
+      description: movie.description,
+      imageUrl: movie.imageUrl || ''
     });
     setEditingId(movie._id);
   };
@@ -348,7 +351,7 @@ function AdminCreateShow() {
       } else {
         await createTheatre(theatreForm);
       }
-      setTheatreForm({ name: '', city: '', location: '' });
+      setTheatreForm({ name: '', city: '', location: '', imageUrl: '' });
       setEditingTheatreId(null);
       setShowTheatreForm(false);
       fetchTheatreList();
@@ -358,7 +361,7 @@ function AdminCreateShow() {
   };
 
   const handleEditTheatre = (t) => {
-    setTheatreForm({ name: t.name, city: t.city, location: t.location || '' });
+    setTheatreForm({ name: t.name, city: t.city, location: t.location || '', imageUrl: t.imageUrl || '' });
     setEditingTheatreId(t._id);
     setShowTheatreForm(true);
   };
@@ -609,6 +612,10 @@ function AdminCreateShow() {
               className="form-control mb-2"
               value={formData.rating} onChange={handleFormChange} />
 
+            <input name="imageUrl" placeholder="Movie image URL"
+              className="form-control mb-2"
+              value={formData.imageUrl} onChange={handleFormChange} />
+
             <textarea name="description" placeholder="Description"
               className="form-control mb-2"
               value={formData.description} onChange={handleFormChange} />
@@ -624,6 +631,7 @@ function AdminCreateShow() {
               <table className="table table-bordered">
                 <thead>
                   <tr>
+                    <th>Poster</th>
                     <th>Title</th>
                     <th>Language</th>
                     <th>Rating</th>
@@ -633,6 +641,13 @@ function AdminCreateShow() {
                 <tbody>
                   {movies.map((movie) => (
                     <tr key={movie._id}>
+                      <td>
+                        {movie.imageUrl ? (
+                          <img src={movie.imageUrl} alt={movie.title} style={{ width: 48, height: 64, objectFit: 'cover', borderRadius: 8 }} />
+                        ) : (
+                          <span className="text-muted small">No image</span>
+                        )}
+                      </td>
                       <td>{movie.title}</td>
                       <td>{movie.language}</td>
                       <td>{movie.rating}</td>
@@ -692,6 +707,14 @@ function AdminCreateShow() {
                     ></button>
                   </div>
                   <div className="modal-body">
+                    {selectedMovie.imageUrl && (
+                      <img
+                        src={selectedMovie.imageUrl}
+                        alt={selectedMovie.title}
+                        style={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 10 }}
+                        className="mb-3"
+                      />
+                    )}
                     <p><strong>Title:</strong> {selectedMovie.title}</p>
                     <p><strong>Language:</strong> {selectedMovie.language}</p>
                     <p><strong>Genre:</strong> {selectedMovie.genre.join(', ')}</p>
@@ -821,7 +844,7 @@ function AdminCreateShow() {
           <div className="col-md-5">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h4 className="mb-0">Theatres</h4>
-              <button className="btn btn-danger btn-sm" onClick={() => { setShowTheatreForm(!showTheatreForm); setEditingTheatreId(null); setTheatreForm({ name: '', city: '', location: '' }); }}>
+              <button className="btn btn-danger btn-sm" onClick={() => { setShowTheatreForm(!showTheatreForm); setEditingTheatreId(null); setTheatreForm({ name: '', city: '', location: '', imageUrl: '' }); }}>
                 {showTheatreForm && !editingTheatreId ? 'Cancel' : '+ Add Theatre'}
               </button>
             </div>
@@ -837,6 +860,8 @@ function AdminCreateShow() {
                   value={theatreForm.city} onChange={e => setTheatreForm({ ...theatreForm, city: e.target.value })} />
                 <input className="form-control mb-2" placeholder="Location (optional)"
                   value={theatreForm.location} onChange={e => setTheatreForm({ ...theatreForm, location: e.target.value })} />
+                <input className="form-control mb-2" placeholder="Theatre image URL"
+                  value={theatreForm.imageUrl} onChange={e => setTheatreForm({ ...theatreForm, imageUrl: e.target.value })} />
                 <button className="btn btn-success btn-sm" type="submit">{editingTheatreId ? 'Update' : 'Create'} Theatre</button>
               </form>
             )}
@@ -851,9 +876,14 @@ function AdminCreateShow() {
                   onClick={() => handleSelectTheatreDetail(t)}
                 >
                   <div className="card-body py-2 d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>{t.name}</strong>
-                      <div className="text-muted small">{t.city}{t.location ? ` — ${t.location}` : ''}</div>
+                    <div className="d-flex align-items-center gap-2">
+                      {t.imageUrl && (
+                        <img src={t.imageUrl} alt={t.name} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 8 }} />
+                      )}
+                      <div>
+                        <strong>{t.name}</strong>
+                        <div className="text-muted small">{t.city}{t.location ? ` — ${t.location}` : ''}</div>
+                      </div>
                     </div>
                     <div className="d-flex gap-1" onClick={e => e.stopPropagation()}>
                       <button className="btn btn-warning btn-sm" onClick={() => handleEditTheatre(t)}>Edit</button>

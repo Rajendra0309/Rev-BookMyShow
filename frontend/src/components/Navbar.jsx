@@ -12,45 +12,44 @@ export default function Navbar() {
     };
 
     return (
-        <nav className='navbar navbar-dark px-4' style={{ background: '#141414' }}>
-            <Link className='navbar-brand fw-bold text-danger' to="/movies">RevBookMyShow</Link>
+        <nav className='navbar rbms-nav px-4'>
+            <Link className='navbar-brand' to="/movies">
+                RevBook<span className='rbms-brand-dot'>MyShow</span>
+            </Link>
             <div className='d-flex align-items-center gap-3'>
                 {user ? (
                     <>
-                        {/* Common links */}
-                        <Link className='text-white text-decoration-none' to="/movies">Movies</Link>
+                        <Link className='rbms-nav-link' to="/movies">Movies</Link>
 
-                        {/* Admin-only links */}
                         {isAdmin && (
-                            <Link className='text-white text-decoration-none' to="/admin/show/create">
+                            <Link className='rbms-nav-link' to="/admin/show/create">
                                 Admin Panel
                             </Link>
                         )}
                         {isAdmin && (
-                            <Link className='text-white text-decoration-none' to="/reports">
+                            <Link className='rbms-nav-link' to="/reports">
                                 Reports
                             </Link>
                         )}
 
-                        {/* Customer-only links */}
                         {!isAdmin && (
-                            <Link className='text-white text-decoration-none' to="/theatres">Theatres</Link>
+                            <Link className='rbms-nav-link' to="/theatres">Theatres</Link>
                         )}
                         {!isAdmin && (
-                            <Link className='text-white text-decoration-none' to="/bookings">My Bookings</Link>
+                            <Link className='rbms-nav-link' to="/bookings">My Bookings</Link>
                         )}
                         {!isAdmin && (
-                            <Link className='text-white text-decoration-none' to="/reports">
-                                🔔 Notifications
+                            <Link className='rbms-nav-link' to="/reports">
+                                Notifications
                             </Link>
                         )}
 
-                        <span className='text-secondary small'>Hi, {user.name} ({user.role})</span>
+                        <span className='rbms-user-pill'>Hi, {user.name} ({user.role})</span>
                         <button className='btn btn-sm btn-danger' onClick={handleLogout}>Logout</button>
                     </>
                 ) : (
                     <>
-                        <Link className='text-white text-decoration-none' to="/login">Login</Link>
+                        <Link className='rbms-nav-link' to="/login">Login</Link>
                         <Link className='btn btn-sm btn-danger' to="/register">Register</Link>
                     </>
                 )}

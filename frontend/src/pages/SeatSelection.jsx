@@ -150,7 +150,7 @@ export default function SeatSelection() {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">🎬 Book Tickets</h2>
+      <h2 className="page-title">Book Tickets</h2>
 
       {error && <div className="alert alert-danger alert-dismissible">
         {error}<button className="btn-close" onClick={() => setError('')}></button>
@@ -215,8 +215,10 @@ export default function SeatSelection() {
             </div>
 
             {/* Screen Label */}
-            <div className="text-center mb-4">
-              <div style={{ background: '#bdc3c7', borderRadius: 6, padding: '6px 60px', display: 'inline-block', fontSize: 13, letterSpacing: 4, color: '#555' }}>▲ SCREEN</div>
+            <div className="text-center mb-3">
+              <div style={{ width: '75%', margin: '0 auto', background: '#d8dee8', color: '#5b6578', borderRadius: 999, padding: '0.35rem 0.75rem', fontSize: 12, fontWeight: 700, letterSpacing: 3 }}>
+                SCREEN
+              </div>
             </div>
 
             {/* Seat Map */}
@@ -225,10 +227,10 @@ export default function SeatSelection() {
             ) : (
               <>
                 {Object.entries(groupSeatsByRow()).map(([row, rowSeats]) => (
-                  <div key={row} className="d-flex align-items-center justify-content-center mb-2">
-                    <span style={{ width: 24, fontWeight: 700, color: '#888', fontSize: 13, flexShrink: 0 }}>{row}</span>
-                    <div className="d-flex gap-1 flex-wrap justify-content-center">
-                      {rowSeats.sort((a, b) => a.seatNumber.localeCompare(b.seatNumber)).map(seat => {
+                  <div key={row} className="d-flex align-items-center justify-content-center mb-2 gap-2">
+                    <span className="text-muted small fw-bold" style={{ width: 24 }}>{row}</span>
+                    <div className="d-flex flex-wrap gap-1 justify-content-center">
+                      {rowSeats.sort((a, b) => a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true })).map(seat => {
                         const style = getSeatStyle(seat);
                         const price = getSeatPrice(seat);
                         return (
@@ -237,7 +239,9 @@ export default function SeatSelection() {
                             title={`${seat.seatNumber} — ${seat.seatType} — ₹${price}`}
                             disabled={bookedSeats.includes(seat.seatNumber)}
                             onClick={() => toggleSeat(seat.seatNumber)}
-                            style={{ width: 46, height: 34, background: style.bg, color: style.color, border: 'none', borderRadius: 5, fontSize: 10, fontWeight: 600, cursor: style.cursor }}
+                            style={{ minWidth: 44, padding: '0.45rem 0.35rem', borderRadius: 8, background: style.bg, color: style.color, border: 'none', fontSize: 12, fontWeight: 600, cursor: style.cursor, transition: 'all 0.1s' }}
+                            onMouseOver={(e) => !bookedSeats.includes(seat.seatNumber) && (e.target.style.opacity = '0.8')}
+                            onMouseOut={(e) => (e.target.style.opacity = '1')}
                           >
                             {seat.seatNumber}
                           </button>
@@ -248,7 +252,7 @@ export default function SeatSelection() {
                 ))}
 
                 {/* Legend with prices */}
-                <div className="d-flex gap-3 flex-wrap mt-4 align-items-center">
+                <div className="d-flex gap-3 mt-3 flex-wrap justify-content-center small">
                   {[
                     { bg: '#ecf0f1', color: '#333', type: 'Regular' },
                     { bg: '#8e44ad', color: '#fff', type: 'Premium' },
@@ -258,10 +262,10 @@ export default function SeatSelection() {
                   ].map(item => {
                     const price = selectedShow.ticketPrice?.[item.type];
                     return (
-                      <div key={item.type} className="d-flex align-items-center gap-1">
-                        <div style={{ width: 22, height: 14, background: item.bg, borderRadius: 3, border: '1px solid #ccc' }}></div>
-                        <small>{item.type}{price ? ` ₹${price}` : ''}</small>
-                      </div>
+                      <span key={item.type}>
+                        <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: 3, background: item.bg, marginRight: '0.4rem', verticalAlign: 'middle', border: '1px solid #ccc' }}></span>
+                        {item.type}{price ? ` ₹${price}` : ''}
+                      </span>
                     );
                   })}
                 </div>
@@ -272,7 +276,7 @@ export default function SeatSelection() {
           {/* Booking Summary Sidebar */}
           <div className="col-lg-4">
             <div className="card shadow-sm sticky-top" style={{ top: 80 }}>
-              <div className="card-header bg-dark text-white"><strong>Booking Summary</strong></div>
+              <div className="card-header" style={{ background: 'linear-gradient(135deg, #cf1d46, #9f1535)', color: '#fff' }}><strong>Booking Summary</strong></div>
               <div className="card-body">
                 <p className="mb-2"><strong>Movie:</strong><br />{selectedShow.movieId?.title}</p>
                 <p className="mb-2"><strong>Theatre:</strong><br />{selectedShow.screenId?.theatreId?.name}</p>
@@ -286,7 +290,7 @@ export default function SeatSelection() {
                     : selectedSeats.map(seatNum => {
                       const seat = seats.find(s => s.seatNumber === seatNum);
                       return (
-                        <span key={seatNum} className="badge bg-primary me-1 mb-1">{seatNum} ₹{getSeatPrice(seat)}</span>
+                        <span key={seatNum} className="badge bg-danger me-1 mb-1">{seatNum} ₹{getSeatPrice(seat)}</span>
                       );
                     })
                   }
@@ -294,7 +298,7 @@ export default function SeatSelection() {
                 <hr />
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <strong className="fs-5">Total</strong>
-                  <strong className="fs-5 text-success">₹{calcTotal()}</strong>
+                  <strong className="fs-5 text-danger">₹{calcTotal()}</strong>
                 </div>
                 <button className="btn btn-danger w-100" disabled={selectedSeats.length === 0 || booking} onClick={handleConfirmBooking}>
                   {booking ? 'Processing...' : selectedSeats.length === 0 ? 'Select Seats' : `Confirm Booking (${selectedSeats.length})`}
