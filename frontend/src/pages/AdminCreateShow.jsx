@@ -32,6 +32,7 @@ function AdminCreateShow() {
   /* ================= MOVIE STATES (UNCHANGED) ================= */
 
   const [movies, setMovies] = useState([]);
+  const [allMovies, setAllMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -129,8 +130,18 @@ function AdminCreateShow() {
 
   useEffect(() => {
     fetchShows();
+    fetchAllMovies();
     fetchTheatres();
   }, []);
+
+  const fetchAllMovies = async () => {
+    try {
+      const data = await getMovies({ limit: 1000 });
+      setAllMovies(data.data || []);
+    } catch {
+      console.error('Error fetching all movies');
+    }
+  };
 
   const fetchTheatres = async () => {
     try {
@@ -513,7 +524,7 @@ function AdminCreateShow() {
     });
   };
 
-  const filteredMoviesForShow = movies.filter(movie =>
+  const filteredMoviesForShow = allMovies.filter(movie =>
     movie.title.toLowerCase().includes(movieSearchShowTab.toLowerCase())
   );
 
