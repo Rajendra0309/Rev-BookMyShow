@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getUser } from '../services/authService';
 import {
     getNotifications,
@@ -43,10 +44,19 @@ function EmptyState({ message }) {
 }
 
 /* ─── Notification Card ────────────────────────── */
-function NotificationCard({ notif, onMarkRead, onDelete }) {
+function NotificationCard({ notif, onMarkRead, onDelete, onOpen }) {
     const isUnread = notif.status === 'Unread';
+    const hasMovieLink = Boolean(notif.movieId?._id || notif.movieId);
     return (
-        <div style={{ ...styles.notifCard, ...(isUnread ? styles.notifUnread : {}) }}>
+        <div
+            style={{
+                ...styles.notifCard,
+                ...(isUnread ? styles.notifUnread : {}),
+                ...(hasMovieLink ? styles.notifClickable : {})
+            }}
+            onClick={() => hasMovieLink && onOpen(notif)}
+            title={hasMovieLink ? 'Open movie' : ''}
+        >
             <div style={styles.notifBody}>
                 <span style={styles.notifMsg}>{notif.message}</span>
                 <span style={styles.notifTime}>{fmtDate(notif.createdAt)}</span>
@@ -54,12 +64,18 @@ function NotificationCard({ notif, onMarkRead, onDelete }) {
             <div style={styles.notifActions}>
                 {isUnread && (
                     <button style={{ ...styles.btn, ...styles.btnPrimary }}
-                        onClick={() => onMarkRead(notif._id)}>
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onMarkRead(notif._id);
+                        }}>
                         Mark Read
                     </button>
                 )}
                 <button style={{ ...styles.btn, ...styles.btnDanger }}
-                    onClick={() => onDelete(notif._id)}>
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(notif._id);
+                    }}>
                     ✕
                 </button>
             </div>
@@ -80,6 +96,7 @@ function StatCard({ label, value, sub, color }) {
 
 /* ─── Main Reports Page ─────────────────────────── */
 export default function Reports() {
+    const navigate = useNavigate();
     const user = getUser();
     const isAdmin = user?.role === 'Admin';
 
@@ -186,6 +203,24 @@ export default function Reports() {
         } catch { setError('Could not delete notification.'); }
     };
 
+    const handleOpenNotification = async (notification) => {
+        const movieId = notification.movieId?._id || notification.movieId;
+        if (!movieId) return;
+
+        if (notification.status === 'Unread') {
+            try {
+                await markAsRead(notification._id);
+                setNotifications(prev =>
+                    prev.map(n => n._id === notification._id ? { ...n, status: 'Read' } : n)
+                );
+            } catch {
+                setError('Could not update notification.');
+            }
+        }
+
+        navigate(`/movies/${movieId}`);
+    };
+
     /* -- Tab list -- */
     const tabs = [
         { key: 'notifications', label: 'Notifications', forAll: true },
@@ -236,7 +271,8 @@ export default function Reports() {
                             {notifications.map(n => (
                                 <NotificationCard key={n._id} notif={n}
                                     onMarkRead={handleMarkRead}
-                                    onDelete={handleDelete} />
+                                    onDelete={handleDelete}
+                                    onOpen={handleOpenNotification} />
                             ))}
                         </div>
                     )}
@@ -644,6 +680,9 @@ const styles = {
     notifUnread: {
         background: '#eff6ff',
         border: '1px solid #bfdbfe'
+    },
+    notifClickable: {
+        cursor: 'pointer'
     },
     notifBody: { display: 'flex', flexDirection: 'column', gap: '0.2rem' },
     notifMsg: { fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' },

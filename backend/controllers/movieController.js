@@ -1,4 +1,5 @@
 const Movie = require('../models/Movie');
+const { notifyCustomersForMovie } = require('../services/movieNotificationService');
 
 /* ======================================================
    CREATE MOVIE (Admin Only)
@@ -7,14 +8,52 @@ exports.createMovie = async (req, res) => {
     try {
         const { title, genre, language, duration, rating, description, imageUrl } = req.body;
 
+        const normalizedTitle = String(title || '').trim();
+        const existingMovie = await Movie.findOne({
+            title: { $regex: `^${normalizedTitle.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}$`, $options: 'i' }
+        });
+
+        if (existingMovie) {
+            if (existingMovie.status === 'Active') {
+                return res.status(400).json({
+                    success: false,
+                    message: "Movie with this title already exists"
+                });
+            }
+
+            existingMovie.genre = genre;
+            existingMovie.language = language;
+            existingMovie.duration = duration;
+            existingMovie.rating = rating;
+            existingMovie.description = description;
+            existingMovie.imageUrl = imageUrl;
+            existingMovie.status = 'Active';
+            await existingMovie.save();
+
+            notifyCustomersForMovie(existingMovie).catch((error) => {
+                console.error('Customer movie notification failed:', error.message);
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Movie reactivated successfully",
+                data: existingMovie
+            });
+        }
+
         const movie = await Movie.create({
-            title,
+            title: normalizedTitle,
             genre,
             language,
             duration,
             rating,
             description,
             imageUrl
+        });
+
+        // Run notification flow in background so movie creation remains fast.
+        notifyCustomersForMovie(movie).catch((error) => {
+            console.error('Customer movie notification failed:', error.message);
         });
 
         res.status(201).json({

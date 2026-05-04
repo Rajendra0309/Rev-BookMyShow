@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const NotificationSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    movieId: { type: mongoose.Schema.Types.ObjectId, ref: 'Movie' },
     message: { type: String, required: true },
     status: { type: String, enum: ['Unread', 'Read'], default: 'Unread' }
 }, { timestamps: true });

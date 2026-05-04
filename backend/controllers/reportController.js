@@ -28,7 +28,15 @@ exports.createNotification = createNotification;
    ====================================================== */
 exports.getUserNotifications = async (req, res) => {
     try {
+        const isOwner = req.user?.id?.toString() === req.params.userId;
+        const isAdmin = req.user?.role === 'Admin';
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+
         const notifications = await Notification.find({ userId: req.params.userId })
+            .populate('movieId', 'title imageUrl')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -53,6 +61,13 @@ exports.markNotificationRead = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Notification not found' });
         }
 
+        const isOwner = req.user?.id?.toString() === notification.userId.toString();
+        const isAdmin = req.user?.role === 'Admin';
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+
         notification.status = 'Read';
         await notification.save();
 
@@ -69,10 +84,20 @@ exports.markNotificationRead = async (req, res) => {
    ====================================================== */
 exports.deleteNotification = async (req, res) => {
     try {
-        const notification = await Notification.findByIdAndDelete(req.params.id);
+        const notification = await Notification.findById(req.params.id);
         if (!notification) {
             return res.status(404).json({ success: false, message: 'Notification not found' });
         }
+
+        const isOwner = req.user?.id?.toString() === notification.userId.toString();
+        const isAdmin = req.user?.role === 'Admin';
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+
+        await Notification.findByIdAndDelete(req.params.id);
+
         res.status(200).json({ success: true, message: 'Notification deleted' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

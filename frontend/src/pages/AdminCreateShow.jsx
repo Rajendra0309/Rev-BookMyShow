@@ -707,9 +707,9 @@ function AdminCreateShow() {
 
           {/* Details Modal */}
           {selectedMovie && (
-            <div className="modal d-block">
+            <div className="modal d-block rbms-modal-glass-wrap" onClick={() => setSelectedMovie(null)}>
               <div className="modal-dialog">
-                <div className="modal-content">
+                <div className="modal-content rbms-modal-glass-content" onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header">
                     <h5 className="modal-title">Movie Details</h5>
                     <button

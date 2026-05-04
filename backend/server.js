@@ -10,10 +10,27 @@ connectDB();
 const app = express();
 
 // CORS
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGIN || process.env.FRONTEND_URL || '')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
+app.use(cors({
+    origin: allowedOrigins.length ? allowedOrigins : true,
+    credentials: true
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Public endpoints for ALB checks and quick verification.
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Rev-BookMyShow backend is running' });
+});
+
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));

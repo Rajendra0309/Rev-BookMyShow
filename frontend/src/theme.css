@@ -219,6 +219,18 @@ body {
   border: 1px solid var(--border-soft);
 }
 
+.rbms-modal-glass-wrap {
+  background: rgba(16, 19, 30, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.rbms-modal-glass-content {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(230, 235, 243, 0.95);
+  box-shadow: 0 16px 44px rgba(16, 19, 30, 0.2);
+}
+
 .rbms-chatbot-wrap {
   position: fixed;
   right: 20px;
@@ -244,6 +256,56 @@ body {
   margin-bottom: 10px;
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(18, 21, 31, 0.18);
+}
+
+.rbms-notification-toast {
+  position: fixed;
+  top: 84px;
+  right: 16px;
+  width: min(360px, calc(100vw - 24px));
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #11131c, #2f3750);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 36px rgba(16, 19, 30, 0.35);
+  z-index: 1300;
+  animation: rbms-toast-in 260ms ease-out;
+  cursor: pointer;
+}
+
+.rbms-notification-toast__title {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffd9e3;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.rbms-notification-toast__message {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+@keyframes rbms-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 576px) {
+  .rbms-notification-toast {
+    top: 72px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
 }
 
 .rbms-chatbot-head {

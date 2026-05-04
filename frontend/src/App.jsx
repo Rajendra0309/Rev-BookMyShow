@@ -13,6 +13,7 @@ import TheatreList from './pages/TheatreList';
 import TheatreDetail from './pages/TheatreDetail';
 import BookingHistory from './pages/BookingHistory';
 import BookingAssistant from './components/BookingAssistant';
+import MovieNotificationToast from './components/MovieNotificationToast';
 
 const Protected = ({ children }) =>
   getToken() ? children : <Navigate to='/login' />;
@@ -76,6 +77,7 @@ function App() {
         </Routes>
       </div>
       <BookingAssistant />
+      <MovieNotificationToast />
     </BrowserRouter>
   );
 }
