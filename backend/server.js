@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
 
 dotenv.config();
@@ -23,7 +24,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Public endpoints for ALB checks and quick verification.
+const distPath = path.join(__dirname, '../frontend/dist');
+const indexHtml = path.resolve(distPath, 'index.html');
+
 app.get('/', (req, res) => {
+    // If a built frontend exists, serve it at root so render/AWS can return the SPA
+    if (fs.existsSync(indexHtml)) {
+        return res.sendFile(indexHtml);
+    }
+
     res.status(200).json({ message: 'Rev-BookMyShow backend is running' });
 });
 
@@ -39,11 +48,11 @@ app.use('/api/shows', require('./routes/showRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 
-// Serve React frontend in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// Serve React frontend when a built `dist` exists (works in Render/AWS deployments)
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
     app.get('/*splat', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
+        res.sendFile(indexHtml);
     });
 }
 
