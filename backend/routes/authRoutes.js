@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     register,
     login,
+    socialLogin,
     getProfile,
     getAllUsers,
     changePassword,
@@ -13,6 +14,7 @@ const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/social-login', socialLogin);
 router.post('/forgot-password', forgotPassword);
 router.get('/security-question', getSecurityQuestion);
 

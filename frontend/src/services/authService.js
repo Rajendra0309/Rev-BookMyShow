@@ -10,6 +10,10 @@ export const login = (data) => {
   return axios.post(`${API}/login`, data);
 };
 
+export const socialLogin = (token) => {
+  return axios.post(`${API}/social-login`, { token });
+};
+
 export const saveToken = (token, user) => {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));

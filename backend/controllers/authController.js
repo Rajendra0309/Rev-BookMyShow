@@ -1,6 +1,35 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin SDK
+try {
+    const serviceAccountKeyEnv = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (serviceAccountKeyEnv) {
+        const serviceAccount = JSON.parse(serviceAccountKeyEnv);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        console.log('Firebase Admin SDK initialized from environment variable.');
+    } else {
+        const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './config/firebase-service-account.json';
+        const fs = require('fs');
+        const path = require('path');
+        const resolvedPath = path.resolve(__dirname, '..', serviceAccountPath);
+        if (fs.existsSync(resolvedPath)) {
+            const serviceAccount = require(resolvedPath);
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+            });
+            console.log(`Firebase Admin SDK initialized from file: ${resolvedPath}`);
+        } else {
+            console.warn('Firebase Admin SDK: Service account key not found. Social login will fail until key is configured.');
+        }
+    }
+} catch (error) {
+    console.error('Failed to initialize Firebase Admin SDK:', error.message);
+}
 
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -167,4 +196,75 @@ const getSecurityQuestion = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getProfile, getAllUsers, changePassword, forgotPassword, getSecurityQuestion };
+const socialLogin = async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            return res.status(400).json({ msg: 'Firebase ID token is required' });
+        }
+
+        // Verify Firebase ID Token
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const { email, name, uid, firebase } = decodedToken;
+        const provider = firebase.sign_in_provider === 'google.com' ? 'google' : 'microsoft';
+
+        // Find or create user in MongoDB
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+                name: name || email.split('@')[0],
+                email,
+                role: 'Customer',
+                authProvider: provider,
+                googleId: provider === 'google' ? uid : undefined,
+                microsoftId: provider === 'microsoft' ? uid : undefined,
+                status: 'Active'
+            });
+        } else {
+            let updated = false;
+            if (provider === 'google' && !user.googleId) {
+                user.googleId = uid;
+                user.authProvider = 'google';
+                updated = true;
+            } else if (provider === 'microsoft' && !user.microsoftId) {
+                user.microsoftId = uid;
+                user.authProvider = 'microsoft';
+                updated = true;
+            }
+
+            if (user.status === 'Inactive') {
+                return res.status(403).json({ msg: 'Account is deactivated' });
+            }
+
+            if (updated) {
+                await user.save();
+            }
+        }
+
+        res.status(200).json({
+            msg: 'Social login successful',
+            token: generateToken(user._id, user.role),
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (err) {
+        console.error('Social login token verification error:', err.message);
+        res.status(401).json({ msg: 'Invalid or expired authorization token' });
+    }
+};
+
+module.exports = { 
+    register, 
+    login, 
+    socialLogin, 
+    getProfile, 
+    getAllUsers, 
+    changePassword, 
+    forgotPassword, 
+    getSecurityQuestion 
+};

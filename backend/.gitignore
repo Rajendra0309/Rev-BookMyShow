@@ -12,3 +12,6 @@ npm-debug.log*
 # Build
 dist/
 build/
+
+# Firebase Service Account
+config/firebase-service-account.json
