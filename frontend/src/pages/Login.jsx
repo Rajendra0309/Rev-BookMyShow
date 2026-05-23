@@ -43,6 +43,9 @@ export default function Login() {
             navigate('/movies');
         } catch (err) {
             console.error(err);
+            if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+                return;
+            }
             setError(err.response?.data?.msg || err.message || 'Social login failed');
         } finally {
             setSocialLoading('');
