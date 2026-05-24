@@ -4,17 +4,17 @@ const Seat = require('../models/Seat');
 const { createNotification } = require('./reportController');
 
 
-// 🔹 Create Booking
-exports.createBooking = async (req, res) => {
+// 🔹 Create Razorpay Payment Order
+exports.createPaymentOrder = async (req, res) => {
     try {
         const { showId, seats } = req.body;
-        const userId = req.user.id;
 
         // 1️⃣ Check if show exists
         const show = await Show.findById(showId);
         if (!show) {
             return res.status(404).json({ message: "Show not found" });
         }
+
         // Prevent booking if show already started (date + time combined)
         const currentDateTime = new Date();
         const [hours, minutes] = (show.showTime || '00:00').split(':').map(Number);
@@ -23,14 +23,14 @@ exports.createBooking = async (req, res) => {
 
         if (currentDateTime > showDateTime) {
             return res.status(400).json({
-                message: "Cannot book. Show has already started."
+                message: "Cannot pay. Show has already started."
             });
         }
 
         // 2️⃣ Check if show is cancelled
         if (show.status === "Cancelled") {
             return res.status(400).json({
-                message: "Cannot book cancelled show"
+                message: "Cannot pay for a cancelled show"
             });
         }
 
@@ -58,12 +58,102 @@ exports.createBooking = async (req, res) => {
             return sum + price;
         }, 0);
 
-        // 5️⃣ Create booking
+        // 5️⃣ Create order in Razorpay
+        const Razorpay = require('razorpay');
+        const razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET
+        });
+
+        const options = {
+            amount: totalAmount * 100, // paise
+            currency: "INR",
+            receipt: `receipt_${Date.now()}`
+        };
+
+        const order = await razorpay.orders.create(options);
+
+        res.status(201).json({
+            orderId: order.id,
+            amount: order.amount,
+            currency: order.currency,
+            totalAmount
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+// 🔹 Create Booking (Verifies Payment & Completes Ticket Confirmation)
+exports.createBooking = async (req, res) => {
+    try {
+        const { showId, seats, razorpayPaymentId, razorpayOrderId, razorpaySignature, paymentMethod } = req.body;
+        const userId = req.user.id;
+
+        // 1️⃣ Cryptographically verify the Razorpay signature
+        const crypto = require('crypto');
+        const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+        hmac.update(razorpayOrderId + "|" + razorpayPaymentId);
+        const generatedSignature = hmac.digest('hex');
+        if (generatedSignature !== razorpaySignature) {
+            return res.status(400).json({ message: "Payment verification failed" });
+        }
+
+        // 2️⃣ Check if show exists
+        const show = await Show.findById(showId);
+        if (!show) {
+            return res.status(404).json({ message: "Show not found" });
+        }
+
+        // Prevent booking if show already started
+        const currentDateTime = new Date();
+        const [hours, minutes] = (show.showTime || '00:00').split(':').map(Number);
+        const showDateTime = new Date(show.showDate);
+        showDateTime.setHours(hours, minutes, 0, 0);
+
+        if (currentDateTime > showDateTime) {
+            return res.status(400).json({
+                message: "Cannot book. Show has already started."
+            });
+        }
+
+        // 3️⃣ Double-check seat occupancy (concurrency check)
+        const existingBooking = await Booking.find({
+            showId,
+            seats: { $in: seats },
+            status: "Confirmed"
+        });
+
+        if (existingBooking.length > 0) {
+            return res.status(400).json({
+                message: "One or more seats already booked"
+            });
+        }
+
+        // 4️⃣ Calculate total amount
+        const seatDocs = await Seat.find({
+            screenId: show.screenId,
+            seatNumber: { $in: seats }
+        });
+
+        const totalAmount = seatDocs.reduce((sum, seat) => {
+            const price = show.ticketPrice?.[seat.seatType] ?? show.ticketPrice?.Regular ?? 0;
+            return sum + price;
+        }, 0);
+
+        // 5️⃣ Create the booking with transaction details
         const newBooking = new Booking({
             userId,
             showId,
             seats,
-            totalAmount
+            totalAmount,
+            paymentMethod: paymentMethod || 'Card',
+            paymentStatus: 'Completed',
+            razorpayOrderId,
+            razorpayPaymentId,
+            razorpaySignature
         });
 
         await newBooking.save();

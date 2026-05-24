@@ -4,11 +4,15 @@ const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 const {
     createBooking,
+    createPaymentOrder,
     getBookingsByUser,
     cancelBooking,
     getSeatAvailability,
     deleteAllBookings
 } = require('../controllers/bookingController');
+
+// Create payment order — logged-in user only
+router.post('/payment-order', protect, createPaymentOrder);
 
 // Create booking — logged-in user only
 router.post('/create', protect, createBooking);

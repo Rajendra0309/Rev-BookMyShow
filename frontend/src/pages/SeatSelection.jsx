@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { getShows } from '../services/bookingService';
 import { getSeatsByScreen } from '../services/theatreService';
-import { checkSeatAvailability, createBooking } from '../services/bookingService';
+import { checkSeatAvailability, createBooking, createPaymentOrder, getShows } from '../services/bookingService';
 import { getToken, getUser } from '../services/authService';
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 export default function SeatSelection() {
   const [searchParams] = useSearchParams();
@@ -91,11 +100,65 @@ export default function SeatSelection() {
     setBooking(true);
     setError('');
     try {
-      await createBooking({ showId: selectedShow._id, seats: selectedSeats });
-      setSuccess({ seats: selectedSeats, total: calcTotal() });
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        setError('Failed to load Razorpay SDK. Please check your internet connection.');
+        setBooking(false);
+        return;
+      }
+
+      const orderRes = await createPaymentOrder({ 
+        showId: selectedShow._id, 
+        seats: selectedSeats 
+      });
+
+      const { orderId, amount, currency, totalAmount } = orderRes.data;
+      const user = getUser();
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: amount,
+        currency: currency,
+        name: "RevBookMyShow",
+        description: `Ticket booking for ${selectedShow?.movieId?.title || 'Movie'}`,
+        order_id: orderId,
+        handler: async function (response) {
+          setBooking(true);
+          try {
+            await createBooking({
+              showId: selectedShow._id,
+              seats: selectedSeats,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature
+            });
+            setSuccess({ seats: selectedSeats, total: totalAmount });
+          } catch (bookingErr) {
+            setError(bookingErr.response?.data?.message || 'Booking confirmation failed.');
+          } finally {
+            setBooking(false);
+          }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || ''
+        },
+        theme: {
+          color: "#dc3545"
+        },
+        modal: {
+          ondismiss: function () {
+            setBooking(false);
+          }
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+
     } catch (err) {
-      setError(err.response?.data?.message || 'Booking failed.');
-    } finally {
+      console.error(err);
+      setError(err.response?.data?.message || 'Booking initiation failed.');
       setBooking(false);
     }
   };

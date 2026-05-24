@@ -19,6 +19,9 @@ export const cancelShow = (id) =>
 export const createBooking = (data) =>
   axios.post(`${API}/bookings/create`, data, { headers: getAuthHeader() });
 
+export const createPaymentOrder = (data) =>
+  axios.post(`${API}/bookings/payment-order`, data, { headers: getAuthHeader() });
+
 export const checkSeatAvailability = (showId) =>
   axios.get(`${API}/bookings/availability/${showId}`, { headers: getAuthHeader() });
 
