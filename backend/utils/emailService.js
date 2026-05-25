@@ -1,4 +1,9 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+const ipv4Lookup = (hostname, options, callback) => {
+    return dns.lookup(hostname, { family: 4 }, callback);
+};
 
 const sendTicketEmail = async (toEmail, userName, pdfBuffer, movieTitle) => {
     try {
@@ -14,6 +19,7 @@ const sendTicketEmail = async (toEmail, userName, pdfBuffer, movieTitle) => {
             port: parseInt(SMTP_PORT, 10) || 587,
             secure: parseInt(SMTP_PORT, 10) === 465,
             family: 4,
+            lookup: ipv4Lookup,
             auth: {
                 user: SMTP_USER,
                 pass: SMTP_PASS
