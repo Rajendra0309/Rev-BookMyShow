@@ -9,15 +9,31 @@ const sendTicketEmail = async (toEmail, userName, pdfBuffer, movieTitle) => {
             return false;
         }
 
-        const transporter = nodemailer.createTransport({
+        let transporter = nodemailer.createTransport({
             host: SMTP_HOST,
             port: parseInt(SMTP_PORT, 10) || 587,
             secure: parseInt(SMTP_PORT, 10) === 465,
+            family: 4,
             auth: {
                 user: SMTP_USER,
                 pass: SMTP_PASS
             }
         });
+
+        try {
+            await transporter.verify();
+        } catch (firstErr) {
+            console.warn('⚠️ IPv4 SMTP connection verification failed, falling back to default resolution:', firstErr.message);
+            transporter = nodemailer.createTransport({
+                host: SMTP_HOST,
+                port: parseInt(SMTP_PORT, 10) || 587,
+                secure: parseInt(SMTP_PORT, 10) === 465,
+                auth: {
+                    user: SMTP_USER,
+                    pass: SMTP_PASS
+                }
+            });
+        }
 
         const mailOptions = {
             from: `"Rev-BookMyShow" <${FROM_EMAIL || SMTP_USER}>`,
