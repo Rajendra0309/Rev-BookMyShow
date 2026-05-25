@@ -2,6 +2,8 @@ const Booking = require('../models/Booking');
 const Show = require('../models/Show');
 const Seat = require('../models/Seat');
 const { createNotification } = require('./reportController');
+const { generateTicketPDF } = require('../utils/pdfGenerator');
+const { sendTicketEmail } = require('../utils/emailService');
 
 
 // 🔹 Create Razorpay Payment Order
@@ -166,6 +168,30 @@ exports.createBooking = async (req, res) => {
             userId,
             `Booking confirmed! 🎉 Show on ${showDateStr} at ${show.showTime}. Total: ₹${totalAmount}.`
         );
+
+        (async () => {
+            try {
+                const populatedShow = await Show.findById(showId)
+                    .populate('movieId')
+                    .populate({
+                        path: 'screenId',
+                        populate: { path: 'theatreId' }
+                    });
+
+                if (populatedShow && populatedShow.movieId && populatedShow.screenId && populatedShow.screenId.theatreId) {
+                    const movie = populatedShow.movieId;
+                    const theatre = populatedShow.screenId.theatreId;
+                    const user = req.user;
+
+                    if (user && user.email) {
+                        const pdfBuffer = await generateTicketPDF(newBooking, populatedShow, movie, theatre);
+                        await sendTicketEmail(user.email, user.name || 'Customer', pdfBuffer, movie.title);
+                    }
+                }
+            } catch (emailErr) {
+                console.error('⚠️ Failed to compile ticket or send confirmation email:', emailErr.message);
+            }
+        })();
 
         res.status(201).json({
             message: "Booking successful",
