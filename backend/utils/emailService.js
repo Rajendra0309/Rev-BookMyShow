@@ -2,7 +2,11 @@ const nodemailer = require('nodemailer');
 const dns = require('dns');
 
 const ipv4Lookup = (hostname, options, callback) => {
-    return dns.lookup(hostname, { family: 4 }, callback);
+    if (typeof options === 'function') {
+        callback = options;
+        options = {};
+    }
+    return dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
 };
 
 const sendTicketEmail = async (toEmail, userName, pdfBuffer, movieTitle) => {
