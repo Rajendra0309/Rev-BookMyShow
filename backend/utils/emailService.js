@@ -18,6 +18,29 @@ const sendTicketEmail = async (toEmail, userName, pdfBuffer, movieTitle) => {
             return false;
         }
 
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <div style="background-color: #dc3545; color: white; padding: 15px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                    <h1 style="margin: 0; font-size: 24px;">Booking Confirmed!</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Hi <strong>${userName}</strong>,</p>
+                    <p>Thank you for booking your movie tickets with <strong>Rev-BookMyShow</strong>. Your payment has been processed successfully.</p>
+                    <p>We have generated your secure entry ticket. Please find the attached PDF containing your booking details and a scannable QR code for entry.</p>
+                    <div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #edf2f7;">
+                        <h3 style="margin-top: 0; color: #2d3748;">Booking Summary:</h3>
+                        <p style="margin: 5px 0;"><strong>Movie:</strong> ${movieTitle}</p>
+                        <p style="margin: 5px 0;"><strong>Status:</strong> Paid & Confirmed</p>
+                    </div>
+                    <p>Please present the QR code in the attached PDF ticket at the cinema entry gate.</p>
+                    <p>Enjoy your movie!</p>
+                    <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 20px 0;" />
+                    <p style="font-size: 12px; color: #718096; text-align: center;">This is an automated receipt email. Please do not reply directly.</p>
+                </div>
+            </div>
+        `;
+        const filename = `ticket_${movieTitle.replace(/\s+/g, '_').toLowerCase()}.pdf`;
+
         let transporter = nodemailer.createTransport({
             host: SMTP_HOST,
             port: parseInt(SMTP_PORT, 10) || 587,
@@ -49,30 +72,10 @@ const sendTicketEmail = async (toEmail, userName, pdfBuffer, movieTitle) => {
             from: `"Rev-BookMyShow" <${FROM_EMAIL || SMTP_USER}>`,
             to: toEmail,
             subject: `🎟️ Your Ticket Confirmation: ${movieTitle}`,
-            html: `
-                <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <div style="background-color: #dc3545; color: white; padding: 15px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
-                        <h1 style="margin: 0; font-size: 24px;">Booking Confirmed!</h1>
-                    </div>
-                    <div style="padding: 20px;">
-                        <p>Hi <strong>${userName}</strong>,</p>
-                        <p>Thank you for booking your movie tickets with <strong>Rev-BookMyShow</strong>. Your payment has been processed successfully.</p>
-                        <p>We have generated your secure entry ticket. Please find the attached PDF containing your booking details and a scannable QR code for entry.</p>
-                        <div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #edf2f7;">
-                            <h3 style="margin-top: 0; color: #2d3748;">Booking Summary:</h3>
-                            <p style="margin: 5px 0;"><strong>Movie:</strong> ${movieTitle}</p>
-                            <p style="margin: 5px 0;"><strong>Status:</strong> Paid & Confirmed</p>
-                        </div>
-                        <p>Please present the QR code in the attached PDF ticket at the cinema entry gate.</p>
-                        <p>Enjoy your movie!</p>
-                        <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 20px 0;" />
-                        <p style="font-size: 12px; color: #718096; text-align: center;">This is an automated receipt email. Please do not reply directly.</p>
-                    </div>
-                </div>
-            `,
+            html: emailHtml,
             attachments: [
                 {
-                    filename: `ticket_${movieTitle.replace(/\s+/g, '_').toLowerCase()}.pdf`,
+                    filename: filename,
                     content: pdfBuffer,
                     contentType: 'application/pdf'
                 }

@@ -1,5 +1,5 @@
 # 🎟️ Serverless PDF Ticket & Email Notification System Setup Guide
-> **In-Memory PDF Generation, Scannable QR Codes, and Automated Nodemailer SMTP Dispatch**
+> **In-Memory PDF Generation, Scannable QR Codes, and SMTP-Only Delivery Configuration**
 
 This document details the configuration parameters, testing walkthroughs, and deliverability troubleshooting for the automated booking receipt system.
 
@@ -13,33 +13,43 @@ The ticket generation and dispatch system executes immediately after a customer'
 2. **Data Relationship Query:** The task queries the database to resolve all foreign keys (Movie title, Theatre name, Screen details, and User contact details).
 3. **In-Memory PDF Layout Draw:** The ticket generator builds an A6-sized PDF receipt detailing the showtime, date, selected seats, total amount, and confirmation details.
 4. **Scannable QR Generation:** A real-time QR code is compiled using the ticket data. When scanned, it outputs raw, structured ticket validation text. This QR image is embedded directly into the PDF.
-5. **Transporter Dispatch:** Nodemailer connects to the configured SMTP server, formats a structured HTML confirmation body, attaches the in-memory PDF buffer, and delivers it to the customer.
+5. **Transporter Dispatch:** Nodemailer establishes a connection with the SMTP server and delivers the PDF ticket to the customer.
 
 ---
 
-## 2. SMTP Environment Configuration
+## 2. Resolving Render Port Blocks (Sending to Everyone)
 
-Add the following credentials to your local `backend/.env` file:
+Render blocks all outbound SMTP ports (**25, 465, and 587**) on their **Free Web Service** tier. Standard Gmail SMTP connections (which require port 587 or 465) will fail with a `Connection timeout` error on Render's free tier. 
 
-*   `SMTP_HOST`: The address of your SMTP server (e.g. `smtp.gmail.com` for Gmail, or `sandbox.smtp.mailtrap.io` for testing).
-*   `SMTP_PORT`: Port number (e.g. `587` for secure TLS startup, or `465` for SSL connections).
-*   `SMTP_USER`: The email address used to log in and send emails (e.g. `yourname@gmail.com`).
-*   `SMTP_PASS`: Your secure 16-character Google App Password (without spaces) or SMTP service credential.
-*   `FROM_EMAIL`: The display email sender address.
+You have two choices to make SMTP send successfully from your deployed app to any customer globally:
+
+### Choice A: Use an SMTP Relay on Port `2525` (Free Tier Option)
+Render blocks 25, 465, and 587, but they **do not block port 2525**. Many global email dispatch services provide SMTP relays on port 2525 specifically to bypass cloud firewalls. 
+1. Sign up for a free account at a service like **Brevo (formerly Sendinblue)** or **SendGrid**.
+2. Perform **Single Sender Verification** in their dashboard (simply enter your personal email address and click the verification link they send to your inbox).
+3. Add these credentials to your Render Web Service Environment:
+   * `SMTP_HOST`: `smtp-relay.sendinblue.com` (for Brevo) or `smtp.sendgrid.net` (for SendGrid)
+   * `SMTP_PORT`: `2525` (This port is unblocked on Render!)
+   * `SMTP_USER`: Your relay username or API key
+   * `SMTP_PASS`: Your relay password
+   * `FROM_EMAIL`: Your verified sender email address
+4. The system will connect via port 2525, bypassing Render's firewall and successfully sending emails to any recipient globally.
+
+### Choice B: Upgrade Render Instance to Paid (Starter Tier Option)
+Render only blocks SMTP ports on free accounts. Upgrading your backend service to Render's **Starter Plan** (paid tier) instantly unblocks ports 587 and 465. 
+Once upgraded, your standard Gmail SMTP configuration (`smtp.gmail.com` on port `587`) will connect and send emails to everyone globally out-of-the-box.
 
 ---
 
-## 3. Resolving Deliverability & "Spam Folder" Issues
+## 3. Localhost Configuration
 
-When testing with a personal Gmail account or a fresh domain, emails may sometimes arrive in the **Spam** folder. This is normal and can be corrected by adjusting your configuration:
+For local development where SMTP ports are not blocked, you can use your Gmail SMTP settings:
 
-### A. Sender Email Match (Critical)
-*   **The Issue:** If `FROM_EMAIL` is set to a custom domain (e.g. `noreply@revbookmyshow.com`) while the SMTP transporter logs in using a personal Gmail account (e.g. `yourname@gmail.com`), Google will flag this as a "Spoofing" attempt because the domains do not match.
-*   **The Fix:** Make sure your `FROM_EMAIL` matches your `SMTP_USER` exactly in your `.env` file.
-
-### B. Mark as "Not Spam"
-*   **The Issue:** Fresh development SMTP connections sending PDF attachments and QR codes look suspicious to spam filters.
-*   **The Fix:** Open your Gmail spam folder, locate the confirmation email, and click **"Report not spam"** or **"Looks safe"**. This teaches the Google spam filter to recognize your developer connection, ensuring subsequent emails land in the primary Inbox.
+*   `SMTP_HOST`: `smtp.gmail.com`
+*   `SMTP_PORT`: `587`
+*   `SMTP_USER`: Your Gmail address.
+*   `SMTP_PASS`: Your 16-character secure Google App Password (without spaces).
+*   `FROM_EMAIL`: Your Gmail address.
 
 ---
 
@@ -50,7 +60,7 @@ Follow these steps to verify both email delivery and QR code scanning:
 1. Launch your backend and React client servers.
 2. Log in, select a movie, choose seats, and complete a test transaction.
 3. Verify that the console prints a success message: `✉️ Confirmation email sent successfully`.
-4. Open the recipient's inbox (or spam folder) and open the booking email.
+4. Open the recipient's inbox and open the booking email.
 5. Open the attached PDF and verify the formatting is aligned correctly.
 6. Open your mobile phone's camera or a QR scanner app and scan the QR code printed on the PDF.
 7. Verify that your phone displays the booking info (Booking ID, Movie Title, Theatre name, Seat numbers, and confirmation date).
