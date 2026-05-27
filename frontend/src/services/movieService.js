@@ -41,6 +41,18 @@ export const createMovie = async (movieData) => {
 };
 
 // ===============================
+// UPLOAD MOVIE POSTER (Admin)
+// ===============================
+export const uploadMovieImage = async (formData) => {
+  const response = await api.post('/movies/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
+
+// ===============================
 // UPDATE MOVIE (Admin)
 // ===============================
 export const updateMovie = async (id, movieData) => {

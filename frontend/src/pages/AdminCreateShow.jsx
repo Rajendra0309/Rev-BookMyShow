@@ -3,7 +3,8 @@ import {
   getMovies,
   createMovie,
   updateMovie,
-  deleteMovie
+  deleteMovie,
+  uploadMovieImage
 } from '../services/movieService';
 import {
   createShow,
@@ -36,6 +37,7 @@ function AdminCreateShow() {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const [search, setSearch] = useState({
     search: '',
@@ -204,6 +206,29 @@ function AdminCreateShow() {
       imageUrl: ''
     });
     setEditingId(null);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileFormData = new FormData();
+    fileFormData.append('image', file);
+
+    setUploading(true);
+    try {
+      const res = await uploadMovieImage(fileFormData);
+      if (res.success) {
+        setFormData(prev => ({ ...prev, imageUrl: res.imageUrl }));
+        alert('Movie poster uploaded successfully!');
+      } else {
+        alert('Failed to upload image: ' + (res.message || 'Unknown error'));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error uploading movie poster');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -623,9 +648,29 @@ function AdminCreateShow() {
               className="form-control mb-2"
               value={formData.rating} onChange={handleFormChange} />
 
-            <input name="imageUrl" placeholder="Movie image URL"
-              className="form-control mb-2"
-              value={formData.imageUrl} onChange={handleFormChange} />
+            <div className="mb-2">
+              <label className="form-label small text-muted mb-1">Movie Poster Image</label>
+              <div className="row g-2 align-items-center">
+                <div className="col-sm-8">
+                  <input name="imageUrl" placeholder="Paste image URL..."
+                    className="form-control"
+                    value={formData.imageUrl} onChange={handleFormChange} />
+                </div>
+                <div className="col-sm-4">
+                  <input type="file" accept="image/*" onChange={handleImageUpload}
+                    className="d-none" id="poster-file-input" disabled={uploading} />
+                  <label htmlFor="poster-file-input" className="btn btn-outline-secondary w-100 m-0">
+                    {uploading ? 'Uploading...' : 'Upload File'}
+                  </label>
+                </div>
+              </div>
+              {formData.imageUrl && (
+                <div className="mt-2 text-start">
+                  <span className="small text-success d-block mb-1">Poster Preview:</span>
+                  <img src={formData.imageUrl} alt="Poster Preview" style={{ maxHeight: 120, borderRadius: 6, border: '1px solid #dee2e6' }} />
+                </div>
+              )}
+            </div>
 
             <textarea name="description" placeholder="Description"
               className="form-control mb-2"

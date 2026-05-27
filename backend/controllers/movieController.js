@@ -1,5 +1,6 @@
 const Movie = require('../models/Movie');
 const { notifyCustomersForMovie } = require('../services/movieNotificationService');
+const { uploadToS3 } = require('../utils/s3Upload');
 
 /* ======================================================
    CREATE MOVIE (Admin Only)
@@ -221,6 +222,41 @@ exports.deleteMovie = async (req, res) => {
             message: "Movie deactivated successfully"
         });
 
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+/* ======================================================
+   UPLOAD MOVIE POSTER TO S3 (Admin Only)
+   ====================================================== */
+exports.uploadMoviePoster = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "No image file provided"
+            });
+        }
+
+        if (!req.file.mimetype.startsWith('image/')) {
+            return res.status(400).json({
+                success: false,
+                message: "Only image files are allowed"
+            });
+        }
+
+        const imageUrl = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
+
+        res.status(200).json({
+            success: true,
+            message: "Image uploaded successfully to AWS S3",
+            imageUrl
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
