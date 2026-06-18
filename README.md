@@ -27,7 +27,10 @@
 | Frontend   | React.js (Vite)                   |
 | Backend    | Node.js + Express.js              |
 | Database   | MongoDB + Mongoose                |
-| Auth       | JWT (JSON Web Tokens)             |
+| Auth       | JWT & Firebase (Google OAuth 2.0) |
+| Payments   | Razorpay Integration              |
+| Uploads    | Multer + AWS SDK v3 (S3 Bucket)   |
+| Delivery   | Nodemailer + PDFKit + QR Code     |
 
 ---
 
@@ -55,6 +58,10 @@ RevBookMyShow/
 │   │   ├── showController.js
 │   │   ├── bookingController.js
 │   │   └── reportController.js
+│   ├── utils/                    # Shared Helper Functions
+│   │   ├── pdfGenerator.js       # A6 PDF & QR Compiler
+│   │   ├── emailService.js       # SMTP + IPv4 Resolver Dispatcher
+│   │   └── s3Upload.js           # AWS S3 Poster Uploader
 │   ├── routes/
 │   ├── middleware/
 │   │   └── authMiddleware.js     # JWT verify + role check
@@ -163,9 +170,18 @@ Runs on **http://localhost:5173**
 ### Admin Panel (single page — 3 tabs)
 | Tab | Manages |
 |-----|---------|
-| Movie Management | Add / Edit / Delete movies |
+| Movie Management | Add / Edit / Delete movies (with local S3 file uploads) |
 | Show Management | Create / Edit / Cancel shows with per-type pricing |
 | Theatre Management | Add/Edit/Delete theatres → screens → configure seats |
+
+### 🛡️ Production & Cloud Upgrades (Completed)
+- **Dual OAuth System:** Integrates native MERN authentication alongside Google Sign-In via Firebase Auth.
+- **Razorpay Payments:** End-to-end checkout integration supporting secure payment gateway processing.
+- **PDF Ticket Generation:** In-memory generation of A6 format PDF tickets with full metadata styling.
+- **Embedded QR Code Verification:** Generates verification QR codes embedded inside the ticket PDF.
+- **Robust SMTP Notification:** Automated Nodemailer emailing with forced IPv4 DNS lookup to bypass IPv6 limits.
+- **Render Firewall Bypass (Port 2525):** Configured Brevo/SendGrid Port 2525 relay supporting free-tier outbound routing.
+- **AWS S3 Poster Uploads:** Direct admin file upload to AWS S3 buckets with automatic ACL fallback and live image preview.
 
 ---
 
@@ -191,17 +207,22 @@ git push origin feature/your-module-name
 
 ---
 
-## 📚 API Documentation
+## 📚 API Documentation & Setup Guides
 
-See the `/docs` folder for detailed API testing guides:
+See the `/docs` folder for detailed API testing and cloud configuration guides:
 
-| File | Module |
-|------|--------|
+| File | Module / Purpose |
+|------|------------------|
 | `AUTH_TESTING.md` | Register, Login, Forgot Password |
 | `MOVIE_TESTING.md` | Movie CRUD |
 | `THEATRE_TESTING.md` | Theatre, Screen & Seat management |
 | `BOOKING_TESTING.md` | Show creation & Booking flow |
 | `REPORTS_TESTING.md` | Revenue, Occupancy & Notifications |
+| `DUAL_OAUTH_SETUP.md` | Firebase & Google OAuth 2.0 Integration |
+| `PAYMENT_GATEWAY_SETUP.md` | Razorpay Checkout Settings |
+| `TICKET_NOTIFICATION_SETUP.md` | SMTP Ports & Brevo Port 2525 Relay Setup |
+| `TICKET_NOTIFICATION_TESTING.md` | PDF & QR Code Verification Guides |
+| `AWS_S3_POSTER_UPLOAD_SETUP.md` | AWS IAM & S3 Bucket Policy Configuration |
 
 > **Base URL:** `http://localhost:5000/api`  
 > **Frontend URL:** `http://localhost:5173`
